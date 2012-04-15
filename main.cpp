@@ -20,30 +20,41 @@ h    c  a  D   J
     ...
 
     Instead of sampling b, B, c, C... I sample b-B, b+B, c-C, c+C... to make the nn insensitive to direction.
+    HANDLED BY Environment::Sample.
 
 */
 
+
+enum Directions {
+    none,
+    forward,
+    forwardLeft,
+    forwardRight,
+    backward,
+    backwardLeft,
+    backwardRight,
+    numDirections
+};
 
 
 class Pet{
 
     protected:
 
-    const int numLayers = 4; // Arbitrary
-    const int layerSize = 10; // Arbitrary
-    const int numInputPositions = 19; // All positions within 2 steps.
-    const int numInputChannels = 6; // Other pets rgb, Scent rgb
-    const int numOutputDirections = 6; // All directions
-    const int numDirectionalOutputChannels = 3; // Move, Fight, Mate
-    const int numGeneralOutputChannels = 3; // Null, Scent
+    const int numLayers = 1; // Arbitrary
+    const int layerSize = 4; // Arbitrary
+    const int numInputPositions = 7; // All positions within 1 steps.
+    const int numInputChannels = 3; // Other pets mate-abillity, nutricient, danger.
+    const int numOutputPositions = 7; // All positions within 1 steps.
+    const int numGeneralOutputs = 2; // Mate, scent.
 
     const int numInputNeurons = numInputPositions*numInputChannels;
     const int numProcessingNeurons = numLayers*layerSize;
-    const int numOutputNeurons = numOutputDirections*numDirectionalOutputChannels + numGeneralOutputChannels;
+    const int numOutputNeurons = numOutputPositions + numGeneralOutputs;
 
     const int numInputConnections = numInputPositions*numInputChannels*layerSize;
     const int numProcessingConnections = (numLayers-1)*layerSize*layerSize;
-    const int numOutputConnections = (numOutputDirections*numDirectionalOutputChannels + numGeneralOutputChannels)*layerSize;
+    const int numOutputConnections = (numOutputPositions + numGeneralOutputs)*layerSize;
 
     float inputNeurons[numInputNeurons];
     float processingNeurons[numProcessingNeurons];
@@ -53,10 +64,18 @@ class Pet{
     float processingConnections[numProcessingConnections];
     float outputConnections[numOutputConnections];
 
+    Environment& environment;
+    int position;
+    Direction facingDirection;
 
-    void collectInput(WorldCell environment[]){
-        for(int i=0; i<)
+    void collectInput(){
+
+        for(Channels channel = 0; i<numChannels; ++i)
+            for(Directions direction = 0; i<numDirections; ++i)
+                inputNeurons[channel*numDirections + direction] = environment.sample(position, facingDirection, direction, channel);
     }
+
+
     void processInput(){
         // First layer takes input directly from input neurons.
         for(int write=0; write<layerSize; ++write){
