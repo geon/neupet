@@ -27,10 +27,15 @@ TODO
 
 ### Pet Sophistication
 
-* Implement the life limit and energy consumption etc.
-* Implement battles.
-* Implement the mating
-* Implement the neural network.
+* Impassable walls
+* Life limit and energy consumption etc.
+* Plants
+* Battles.
+* Mating
+* Neural network.
+* New senses. Sight (1/distance to closest Pet) in n directions over m degrees of FOV. Multiple channels for food, mate and danger?
+* Water (with Pets able to traverse water or land by varying speed? Value for how land or water-bound they are? Some Pets amphibious. How to ballance it?)
+* Spiecification. Add an input for how many genes a pair of Pets share.
 
 ### Misc.
 

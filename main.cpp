@@ -42,8 +42,22 @@ enum FacingDirection {
 	numDirections
 };
 */
+
+enum Action {
+//	sleep,
+	forward,
+//	forwardLeft,
+//	forwardRight,
+//	backward,
+//	backwardLeft,
+//	backwardRight,
+//	signalMating,
+	numActions
+};
+
+
 enum Direction {
-	none,
+//	none,
 	left,
 	upLeft,
 	upRight,
@@ -53,16 +67,19 @@ enum Direction {
 	numDirections
 };
 
-class World;
+
+struct Sensory{
+	// This should contain everything the Pet can sense.
+};
+
 
 class Pet{
 
 	public:
 	
-	Pet(World &world):world(world){
-
-		facingDirection = static_cast<Direction>(rand() % numDirections);
-	};
+//	Pet(){
+//
+//	};
 
 	protected:
 
@@ -124,10 +141,10 @@ class Pet{
 //	}
 
 
-	World &world;
+//	World &world;
 	
 //	int position;
-	Direction facingDirection;
+//	Direction facingDirection;
 
 //	float breedingEnergy = 0.2;
 //	float energy;
@@ -135,7 +152,18 @@ class Pet{
 
 	public:
 
-	void live();
+	Action getActionForSensory(Sensory sensory){
+//		collectInput();
+//		processInput();
+//		respondToInput();
+
+
+//		if(! (rand() % 20))
+//			facingDirection = static_cast<Direction>(rand() % numDirections);
+	
+
+		return forward;	
+	}
 
 
 };
@@ -171,6 +199,7 @@ class World{
 	Pet *cells[width*height];
 	std::list<Pet *> pets;
 	std::map<Pet *, int> petPositions;
+	std::map<Pet *, Direction> petDirections;
 	
 	public:
 
@@ -225,11 +254,12 @@ class World{
 
 	void generatePopulation(int numPets){
 		for(int i=0; i<numPets && i<width*height; ++i){
-			Pet *pet = new Pet(*this);;
+			Pet *pet = new Pet();;
 			int position = i * (width*height)/(float)numPets;
 			cells[position] = pet;
 			pets.push_back(pet);
 			petPositions[pet] = position;
+			petDirections[pet] = static_cast<Direction>(rand() % numDirections);
 		}
 	}
 
@@ -263,42 +293,30 @@ class World{
 	void step(){
 
 		for(std::list<Pet *>::iterator i=pets.begin(); i != pets.end(); ++i){
-			(*i)->live();
+			applyActionToPet(**i, (*i)->getActionForSensory(Sensory()));
 		}
 		
 	}
 	
 	
-	void movePet(Pet &pet, Direction direction){
+	void applyActionToPet(Pet &pet, Action action){
 	
 		int oldPosition = petPositions[&pet];
+		
+		Direction direction = petDirections[&pet];
+		
 		int newPosition = movePosition(oldPosition, direction);
 
 		if (!cells[newPosition]) {
 			cells[oldPosition] = NULL;
 			cells[newPosition] = &pet;
 	
-			petPositions.erase(&pet);
 			petPositions[&pet] = newPosition;
 		}		
 	}
 
 
 };
-
-
-void Pet::live(){
-//		collectInput();
-//		processInput();
-//		respondToInput();
-
-
-	if(! (rand() % 20))
-		facingDirection = static_cast<Direction>(rand() % numDirections);
-
-
-	world.movePet(*this, facingDirection);
-}
 
 
 
