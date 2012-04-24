@@ -21,17 +21,14 @@ TODO
 
 ### World/Pet Interaction
 
-* Pets should not be able to move themselves, just report a wanted action to the world.
 * Pets should be presented a pre-rotated and filtered piece of the world they can sense. No access to the world needed.
-* Pets should not know in what direction they are facing, just like they don't know where they are. Let the World handle this.
 
 ### Pet Sophistication
 
 * Impassable walls
 * Life limit and energy consumption etc.
 * Plants
-* Battles.
-* Mating
+* Battles & Mating - Add a flag for each so the Pet can signal if it is violent or "in heat". Violent Pets will battle anything it moves into. Pets in heat will mate if running into another Pet in heat.
 * Neural network.
 * New senses. Sight (1/distance to closest Pet) in n directions over m degrees of FOV. Multiple channels for food, mate and danger?
 * Water (with Pets able to traverse water or land by varying speed? Value for how land or water-bound they are? Some Pets amphibious. How to ballance it?)

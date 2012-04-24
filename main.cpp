@@ -30,34 +30,19 @@ h	c  a  D   J
 */
 
 
-/*
-enum FacingDirection {
-	none,
+
+enum RelativeDirection {
 	forward,
-	forwardLeft,
 	forwardRight,
+	backwardRight,
 	backward,
 	backwardLeft,
-	backwardRight,
-	numDirections
-};
-*/
-
-enum Action {
-//	sleep,
-	forward,
-//	forwardLeft,
-//	forwardRight,
-//	backward,
-//	backwardLeft,
-//	backwardRight,
-//	signalMating,
-	numActions
+	forwardLeft,
+	numRelativeDirections
 };
 
 
 enum Direction {
-//	none,
 	left,
 	upLeft,
 	upRight,
@@ -152,7 +137,7 @@ class Pet{
 
 	public:
 
-	Action getActionForSensory(Sensory sensory){
+	RelativeDirection getRelativeDirectionForSensory(Sensory sensory){
 //		collectInput();
 //		processInput();
 //		respondToInput();
@@ -160,9 +145,23 @@ class Pet{
 
 //		if(! (rand() % 20))
 //			facingDirection = static_cast<Direction>(rand() % numDirections);
-	
 
-		return forward;	
+		switch (rand() % 3) {
+
+			case 0:
+				return forward;
+				break;
+
+			case 1:
+				return forwardLeft;
+				break;
+
+			case 2:
+				return forwardRight;
+				break;
+		}
+
+		return forwardLeft;	
 	}
 
 
@@ -246,10 +245,18 @@ class World{
 				break;
 		}
 			
-		x %= width;
-		y %= height;
+		x = (x + width) % width;
+		y = (y + height) % height;
 
 		return coordinateToIndex(x, y);
+	}
+	
+	
+	Direction offsetDirectionByRelativeDirection(Direction direction, RelativeDirection relativeDirection){
+		
+		return static_cast<Direction>(
+			(static_cast<int>(direction) + static_cast<int>(numDirections) + static_cast<int>(relativeDirection)) % static_cast<int>(numDirections)
+		);
 	}
 
 	void generatePopulation(int numPets){
@@ -293,24 +300,25 @@ class World{
 	void step(){
 
 		for(std::list<Pet *>::iterator i=pets.begin(); i != pets.end(); ++i){
-			applyActionToPet(**i, (*i)->getActionForSensory(Sensory()));
+			applyRelativeDirectionToPet(**i, (*i)->getRelativeDirectionForSensory(Sensory()));
 		}
 		
 	}
 	
 	
-	void applyActionToPet(Pet &pet, Action action){
+	void applyRelativeDirectionToPet(Pet &pet, RelativeDirection relativeDirection){
 	
+		Direction oldDirection = petDirections[&pet];
+		Direction newDirection = offsetDirectionByRelativeDirection(oldDirection, relativeDirection);
+
 		int oldPosition = petPositions[&pet];
-		
-		Direction direction = petDirections[&pet];
-		
-		int newPosition = movePosition(oldPosition, direction);
+		int newPosition = movePosition(oldPosition, newDirection);
 
 		if (!cells[newPosition]) {
 			cells[oldPosition] = NULL;
 			cells[newPosition] = &pet;
 	
+			petDirections[&pet] = newDirection;
 			petPositions[&pet] = newPosition;
 		}		
 	}
