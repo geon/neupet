@@ -53,6 +53,23 @@ enum Direction {
 };
 
 
+enum Action {
+	move   = 1 << 0,
+	battle = 1 << 1,
+	mate   = 1 << 2
+};
+
+
+struct PetIntention{
+	
+	PetIntention(Action action, RelativeDirection relativeDirection) : action(action), relativeDirection(relativeDirection) {
+	}
+	
+	Action action;
+	RelativeDirection relativeDirection;
+};
+
+
 struct Sensory{
 	// This should contain everything the Pet can sense.
 };
@@ -137,31 +154,30 @@ class Pet{
 
 	public:
 
-	RelativeDirection getRelativeDirectionForSensory(Sensory sensory){
+	PetIntention getPetIntentionForSensory(Sensory sensory){
 //		collectInput();
 //		processInput();
 //		respondToInput();
 
-
-//		if(! (rand() % 20))
-//			facingDirection = static_cast<Direction>(rand() % numDirections);
+		RelativeDirection relativeDirection;
 
 		switch (rand() % 3) {
 
 			case 0:
-				return forward;
+				relativeDirection = forward;
 				break;
 
 			case 1:
-				return forwardLeft;
+				relativeDirection = forwardLeft;
 				break;
 
 			case 2:
-				return forwardRight;
+			default:
+				relativeDirection = forwardRight;
 				break;
 		}
 
-		return forwardLeft;	
+		return PetIntention(static_cast<Action>(mate | battle | move), relativeDirection);
 	}
 
 
@@ -300,19 +316,23 @@ class World{
 	void step(){
 
 		for(std::list<Pet *>::iterator i=pets.begin(); i != pets.end(); ++i){
-			applyRelativeDirectionToPet(**i, (*i)->getRelativeDirectionForSensory(Sensory()));
+			applyPetIntentionToPet(**i, (*i)->getPetIntentionForSensory(Sensory()));
 		}
 		
 	}
 	
 	
-	void applyRelativeDirectionToPet(Pet &pet, RelativeDirection relativeDirection){
+	void applyPetIntentionToPet(Pet &pet, PetIntention petIntention){
 	
 		Direction oldDirection = petDirections[&pet];
-		Direction newDirection = offsetDirectionByRelativeDirection(oldDirection, relativeDirection);
+		Direction newDirection = offsetDirectionByRelativeDirection(oldDirection, petIntention.relativeDirection);
 
 		int oldPosition = petPositions[&pet];
-		int newPosition = movePosition(oldPosition, newDirection);
+		int newPosition = oldPosition;
+		
+		if (petIntention.action && move) {
+			newPosition = movePosition(oldPosition, newDirection);
+		}
 
 		if (!cells[newPosition]) {
 			cells[oldPosition] = NULL;
