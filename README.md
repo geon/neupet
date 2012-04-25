@@ -23,17 +23,21 @@ TODO
 
 * Pets should be presented a pre-rotated and filtered piece of the world they can sense. No access to the world needed.
 
-### Pet Sophistication
+### World/Pet Sophistication
 
-* Impassable walls
 * Life limit and energy consumption etc.
 * Plants
-* Battles & Mating - Add a flag for each so the Pet can signal if it is violent or "in heat". Violent Pets will battle anything it moves into. Pets in heat will mate if running into another Pet in heat.
-* Neural network.
-* New senses. Sight (1/distance to closest Pet) in n directions over m degrees of FOV. Multiple channels for food, mate and danger?
 * Water (with Pets able to traverse water or land by varying speed? Value for how land or water-bound they are? Some Pets amphibious. How to ballance it?)
-* Spiecification. Add an input for how many genes a pair of Pets share.
+* Battles & Mating - Add a flag for each so the Pet can signal if it is violent or "in heat". Violent Pets will battle anything it moves into. Pets in heat will mate if running into another Pet in heat.
+* Make Pets sense the direction other Pets are facing. This will enable flocking.
+* Neural network.
+* WorldCell height - (Replaces impassable walls and water (water level = 0).) Higher energy consumption uphill, impossible to climb too steep hills (gradient > 1), dangerous drops. (Needs 3D (or 2.5D) graphics.)
+* Speciation. Add an input for how many genes a pair of Pets share.
+* New senses.
+	* Sight (1/distance to closest Pet) in n directions over m degrees of FOV. Multiple channels for food, mate and danger?
+	* Smell - Each world cell should have the smell of the last occupant. Outputs to the visiting Pet is the strenght of the smell, and the gene similarity to itself. (?)
 
 ### Misc.
 
 * Pretty graphics.
+* Ancestry tracking. Useful for statistics.

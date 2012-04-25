@@ -75,6 +75,8 @@ struct Sensory{
 };
 
 
+
+
 class Pet{
 
 	public:
@@ -143,10 +145,6 @@ class Pet{
 //	}
 
 
-//	World &world;
-	
-//	int position;
-//	Direction facingDirection;
 
 //	float breedingEnergy = 0.2;
 //	float energy;
@@ -161,20 +159,20 @@ class Pet{
 
 		RelativeDirection relativeDirection;
 
-		switch (rand() % 3) {
+		float random = rand() / (float) RAND_MAX;
 
-			case 0:
-				relativeDirection = forward;
-				break;
-
-			case 1:
-				relativeDirection = forwardLeft;
-				break;
-
-			case 2:
-			default:
-				relativeDirection = forwardRight;
-				break;
+		if(random < .1) {
+			relativeDirection = forwardLeft;
+		} else if(random < .1+.1) {
+			relativeDirection = forwardRight;
+		} else if(random < .1+.1+.05) {
+			relativeDirection = backwardLeft;
+		} else if(random < .1+.1+.05+.05) {
+			relativeDirection = backwardRight;
+		} else if(random < .1+.1+.05+.05+.02) {
+			relativeDirection = backward;
+		} else {
+			relativeDirection = forward;
 		}
 
 		return PetIntention(static_cast<Action>(mate | battle | move), relativeDirection);
@@ -184,21 +182,38 @@ class Pet{
 };
 
 
+struct WorldCell{
+
+	WorldCell(){
+
+		pet = NULL;
+		
+		plantEnergy = 0;
+		plantMaxEnergy = 1;
+		plantGrowth = 0.01;
+		
+		impassable = false;
+	}
+	
+	Pet *pet;
+	
+	float plantEnergy;
+	float plantMaxEnergy;
+	float plantGrowth;
+	
+	bool impassable;
+};
+
+
 class World{
 
 	public:
 
 	World(){
 
-		for(int i=0; i<width*height; ++i){
-			cells[i] = NULL;
-		}
+		buildCage(6);
 	}
 	~World(){
-
-//		for(int i=0; i<width*height; ++i){
-//			delete cells[i];
-//		}
 
 		for(std::list<Pet *>::iterator i=pets.begin(); i != pets.end(); ++i){
 			delete *i;
@@ -211,7 +226,7 @@ class World{
 
 	protected:
 
-	Pet *cells[width*height];
+	WorldCell cells[width*height];
 	std::list<Pet *> pets;
 	std::map<Pet *, int> petPositions;
 	std::map<Pet *, Direction> petDirections;
@@ -275,16 +290,50 @@ class World{
 		);
 	}
 
+
+	void buildCage(int sideLength){
+		// Draw a "cage" of walls with one side open.
+
+		// Begin in the center.
+		int position = coordinateToIndex(width/2, height/2);
+		
+		// Move to starting position
+		for(int i=0; i<sideLength; ++i){
+			position = movePosition(position, upLeft);
+		}
+		cells[position].impassable = true;
+
+		// Draw a semi circle. (5 sides of 6.)
+		Direction direction = downLeft;
+		for(int j=0; j<5; ++j){
+
+			// Draw one side.
+			for(int i=0; i<sideLength; ++i){
+
+				// Take a step.
+				position = movePosition(position, direction);
+				
+				// Place wall.
+				cells[position].impassable = true;
+			}
+			
+			// Turn.
+			direction = offsetDirectionByRelativeDirection(direction, forwardLeft);
+		}
+	}
+
+
 	void generatePopulation(int numPets){
 		for(int i=0; i<numPets && i<width*height; ++i){
 			Pet *pet = new Pet();;
 			int position = i * (width*height)/(float)numPets;
-			cells[position] = pet;
+			cells[position].pet = pet;
 			pets.push_back(pet);
 			petPositions[pet] = position;
 			petDirections[pet] = static_cast<Direction>(rand() % numDirections);
 		}
 	}
+
 
 	void render(){
 
@@ -300,10 +349,10 @@ class World{
 			for(int x=0; x < width; ++x){
 
 				// Get the relevant cell.
-				Pet *cell = cells[coordinateToIndex(x, y)];
+				WorldCell &cell = cells[coordinateToIndex(x, y)];
 
 				// Mark any occupied cell.
-				std::cout << (cell ? '*' : ' ');
+				std::cout << (cell.pet ? '*' : (cell.impassable ? 'X' : ' '));
 
 				// Spacing for hexagonal layout.
 				std::cout << ' ';
@@ -316,31 +365,39 @@ class World{
 	void step(){
 
 		for(std::list<Pet *>::iterator i=pets.begin(); i != pets.end(); ++i){
-			applyPetIntentionToPet(**i, (*i)->getPetIntentionForSensory(Sensory()));
+			applyPetIntentionToPet(*i, (*i)->getPetIntentionForSensory(Sensory()));
 		}
 		
 	}
 	
 	
-	void applyPetIntentionToPet(Pet &pet, PetIntention petIntention){
+	void applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 	
-		Direction oldDirection = petDirections[&pet];
+		Direction oldDirection = petDirections[pet];
 		Direction newDirection = offsetDirectionByRelativeDirection(oldDirection, petIntention.relativeDirection);
 
-		int oldPosition = petPositions[&pet];
+		int oldPosition = petPositions[pet];
 		int newPosition = oldPosition;
 		
+		// Does the Pet want to move?
 		if (petIntention.action && move) {
+			
+			// Calculate the target position.
 			newPosition = movePosition(oldPosition, newDirection);
+
+			// Is it possible to move there?
+			if (!cells[newPosition].pet && !cells[newPosition].impassable) {
+				
+				// Actually move.
+				
+				cells[oldPosition].pet = NULL;
+				cells[newPosition].pet = pet;
+		
+				petDirections[pet] = newDirection;
+				petPositions[pet] = newPosition;
+			}		
 		}
 
-		if (!cells[newPosition]) {
-			cells[oldPosition] = NULL;
-			cells[newPosition] = &pet;
-	
-			petDirections[&pet] = newDirection;
-			petPositions[&pet] = newPosition;
-		}		
 	}
 
 
