@@ -18,27 +18,26 @@ PetIntention Pet::getPetIntentionForSensoryInput(SensoryInput sensory){
 	
 	RelativeDirection relativeDirection;
 	
-//	float random = rand() / (float) RAND_MAX;
-//	
-//	if(random < .1) {
-//		relativeDirection = forwardLeft;
-//	} else if(random < .1+.1) {
-//		relativeDirection = forwardRight;
-//	} else {
-//		relativeDirection = forward;
-//	}
+	// Pick direction randomly, preferring forward, but turning (forward) left or right sometimes.
+	float random = rand() / (float) RAND_MAX;
+	if(random < .1) {
+		relativeDirection = forwardLeft;
+	} else if(random < .1+.1) {
+		relativeDirection = forwardRight;
+	} else {
+		relativeDirection = forward;
+	}
 
-	relativeDirection = forward;
-
-	// Use backward directions as backup.		
+	// Use all directions as backup in case the preferred one is blocked.		
 	RelativeDirection backupRelativeDirections[] = {
+		forward,
 		forwardLeft,
 		forwardRight,
 		backwardLeft,
 		backwardRight,
 		backward
 	};
-	for(int i=0; i<5; ++i){
+	for(int i=0; i<6; ++i){
 		WorldCell cell = sensory.touchedCells[relativeDirection];
 		if(cell.pet || cell.impassable){
 			relativeDirection = backupRelativeDirections[i];
