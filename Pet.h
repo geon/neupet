@@ -7,17 +7,17 @@ class SensoryInput;
 
 class Pet{
 
-	protected:
+public:
 	
-
-//	float breedingEnergy = 0.2;
-//	float energy;
-
-
-	public:
-
+ 	Pet() : energy(0.5), maxEnergy(1) {}
 	PetIntention getPetIntentionForSensoryInput(SensoryInput sensory);
-
+	
+	
+//protected:
+	
+//	float breedingEnergy = 0.2;
+	float energy;
+	float maxEnergy;
 };
 
 #endif

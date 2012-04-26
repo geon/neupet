@@ -16,6 +16,7 @@ int main()
 
 	World world;
 	world.generatePopulation(numPets);
+	world.sprinklePlants(30);
 	world.render();
 
 	while(std::cin.get() != 'q'){

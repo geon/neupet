@@ -21,16 +21,18 @@ TODO
 
 ### World/Pet Interaction
 
-* Pets should be presented a pre-rotated and filtered piece of the world they can sense. No access to the world needed.
+* Move Pet enery levels to World, and bundle in a PetState struct. Supply as SensoryInput.
+* Interface for the Pet position and direction, energy levels etc. in World.
+* Split the plant logic to separate class with generic base class. (?)
 
 ### World/Pet Sophistication
 
-* Life limit and energy consumption etc.
-* Plants
-* Water (with Pets able to traverse water or land by varying speed? Value for how land or water-bound they are? Some Pets amphibious. How to ballance it?)
 * Battles & Mating - Add a flag for each so the Pet can signal if it is violent or "in heat". Violent Pets will battle anything it moves into. Pets in heat will mate if running into another Pet in heat.
-* Make Pets sense the direction other Pets are facing. This will enable flocking.
 * Neural network.
+* Make Pets sense the direction other Pets are facing. This will enable flocking.
+* Energy consumption depending on action. Less for staying still, more for fighting and pregnancy.
+* Health, Strength, Metabolism, Mass etc. interacting with each other.
+* Water (with Pets able to traverse water or land by varying speed? Value for how land or water-bound they are? Some Pets amphibious. How to ballance it?)
 * WorldCell height - (Replaces impassable walls and water (water level = 0).) Higher energy consumption uphill, impossible to climb too steep hills (gradient > 1), dangerous drops. (Needs 3D (or 2.5D) graphics.)
 * Speciation. Add an input for how many genes a pair of Pets share.
 * New senses.

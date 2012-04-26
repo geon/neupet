@@ -38,6 +38,7 @@ class World{
 
 	void buildCage(int sideLength);
 	void generatePopulation(int numPets);
+	void sprinklePlants(int numPlants);
 	void render();
 	void step();
 	void applyPetIntentionToPet(Pet *pet, PetIntention petIntention);

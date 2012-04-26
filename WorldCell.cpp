@@ -6,7 +6,7 @@ WorldCell::WorldCell(){
 	
 	plantEnergy = 0;
 	plantMaxEnergy = 1;
-	plantGrowth = 0.01;
+	plantGrowth = 0;
 	
 	impassable = false;
 }

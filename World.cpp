@@ -2,6 +2,7 @@
 #include "SensoryInput.h"
 
 #include <iostream>
+#include <algorithm>
 
 
 World::World(){
@@ -112,12 +113,23 @@ void World::buildCage(int sideLength){
 
 void World::generatePopulation(int numPets){
 	for(int i=0; i<numPets && i<width*height; ++i){
-		Pet *pet = new Pet();;
+		Pet *pet = new Pet();
 		int position = i * (width*height)/(float)numPets;
 		cells[position].pet = pet;
 		pets.push_back(pet);
 		petPositions[pet] = position;
 		petDirections[pet] = static_cast<Direction>(rand() % numDirections);
+	}
+}
+
+
+void World::sprinklePlants(int numPlants){
+	for(int i=0; i<numPlants; ++i){
+		int position = rand() % (width*height);
+		WorldCell &cell = cells[position];
+		
+		cell.plantGrowth = 0.01;
+		cell.plantEnergy = cell.plantMaxEnergy * rand() / (float) RAND_MAX;
 	}
 }
 
@@ -139,7 +151,7 @@ void World::render(){
 			WorldCell &cell = cells[coordinateToIndex(x, y)];
 			
 			// Mark any occupied cell.
-			std::cout << (cell.pet ? '*' : (cell.impassable ? 'X' : ' '));
+			std::cout << (cell.pet ? (cell.pet->energy > 0 ? '*' : 'o') : (cell.impassable ? 'X' : (cell.plantEnergy > 0 ? (cell.plantEnergy > 0.5 ? 'A' : '^') : ' ')));
 			
 			// Spacing for hexagonal layout.
 			std::cout << ' ';
@@ -151,39 +163,56 @@ void World::render(){
 
 void World::step(){
 	
+	// Update Pets.
 	for(std::list<Pet *>::iterator i=pets.begin(); i != pets.end(); ++i){
 		Pet *pet = *i;
 		applyPetIntentionToPet(pet, pet->getPetIntentionForSensoryInput(SensoryInput(this, pet)));
 	}
 	
+	// Update WorldCells.
+	for (int i=0; i<width*height; ++i) {
+		WorldCell &cell = cells[i];
+		
+		// Plant growth.
+		cell.plantEnergy = std::min(cell.plantEnergy + cell.plantGrowth, cell.plantMaxEnergy);
+	}
 }
 
 
 void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 	
-	Direction oldDirection = petDirections[pet];
-	Direction newDirection = offsetDirectionByRelativeDirection(oldDirection, petIntention.relativeDirection);
-	
-	int oldPosition = petPositions[pet];
-	int newPosition = oldPosition;
-	
-	// Does the Pet want to move?
-	if (petIntention.action && move) {
+	int currentPosition = petPositions[pet];
+
+	// Eat plants.
+	pet->energy += cells[currentPosition].plantEnergy;
+	pet->energy -= 0.01;
+	pet->energy = std::min(pet->energy, pet->maxEnergy);
+	cells[currentPosition].plantEnergy = 0;
+
+	if (pet->energy > 0) {
+		Direction oldDirection = petDirections[pet];
+		Direction newDirection = offsetDirectionByRelativeDirection(oldDirection, petIntention.relativeDirection);
 		
-		// Calculate the target position.
-		newPosition = movePosition(oldPosition, newDirection);
+		int newPosition = currentPosition;
 		
-		// Is it possible to move there?
-		if (!cells[newPosition].pet && !cells[newPosition].impassable) {
+		// Does the Pet want to move?
+		if (petIntention.action && move) {
 			
-			// Actually move.
+			// Calculate the target position.
+			newPosition = movePosition(currentPosition, newDirection);
 			
-			cells[oldPosition].pet = NULL;
-			cells[newPosition].pet = pet;
-			
-			petDirections[pet] = newDirection;
-			petPositions[pet] = newPosition;
-		}		
+			// Is it possible to move there?
+			if (!cells[newPosition].pet && !cells[newPosition].impassable) {
+				
+				// Actually move.
+				
+				cells[currentPosition].pet = NULL;
+				cells[newPosition].pet = pet;
+				
+				petDirections[pet] = newDirection;
+				petPositions[pet] = newPosition;
+			}		
+		}
 	}
 	
 }
