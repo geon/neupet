@@ -13,6 +13,6 @@ SensoryInput::SensoryInput(World *world, Pet* pet){
 	
 	// Sample the touchedCell's in all relative directions, in order.
 	for(int relativeDirection=0; relativeDirection<numRelativeDirections; ++relativeDirection){
-		touchedCells[relativeDirection] = world->cells[world->movePosition(position, world->offsetDirectionByRelativeDirection(left, static_cast<RelativeDirection>(relativeDirection)))];
+		touchedCells[relativeDirection] = world->cells[world->movePosition(position, world->offsetDirectionByRelativeDirection(world->petDirections[pet], static_cast<RelativeDirection>(relativeDirection)))];
 	}
 }
