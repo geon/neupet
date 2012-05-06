@@ -2,7 +2,8 @@
 #define RELATIVEDIRECTION
 
 enum RelativeDirection {
-	forward,
+	firstRelativeDirection = 0,
+	forward = firstRelativeDirection,
 	forwardRight,
 	backwardRight,
 	backward,

@@ -21,17 +21,17 @@ TODO
 
 ### World/Pet Interaction
 
-* Move Pet enery levels to World, and bundle in a PetState struct. Supply as SensoryInput.
+* Move Pet energy levels to World, and bundle in a PetState struct. Supply as SensoryInput.
 * Interface for the Pet position and direction, energy levels etc. in World.
 * Split the plant logic to separate class with generic base class. (?)
 
 ### World/Pet Sophistication
 
-* Battles & Mating - Add a flag for each so the Pet can signal if it is violent or "in heat". Violent Pets will battle anything it moves into. Pets in heat will mate if running into another Pet in heat.
-* Neural network.
-* Make Pets sense the direction other Pets are facing. This will enable flocking.
-* Energy consumption depending on action. Less for staying still, more for fighting and pregnancy.
+* Basic mating for evolution of neural network.
 * Health, Strength, Metabolism, Mass etc. interacting with each other.
+* Battles & Mating - Add a flag for each so the Pet can signal if it is violent or "in heat". Violent Pets will battle anything it moves into. Pets in heat will mate if running into another Pet in heat.
+* Energy consumption depending on action. Less for staying still, more for fighting and pregnancy.
+* Make Pets sense the direction other Pets are facing. This will enable flocking.
 * Water (with Pets able to traverse water or land by varying speed? Value for how land or water-bound they are? Some Pets amphibious. How to ballance it?)
 * WorldCell height - (Replaces impassable walls and water (water level = 0).) Higher energy consumption uphill, impossible to climb too steep hills (gradient > 1), dangerous drops. (Needs 3D (or 2.5D) graphics.)
 * Speciation. Add an input for how many genes a pair of Pets share.
@@ -41,5 +41,7 @@ TODO
 
 ### Misc.
 
-* Pretty graphics.
+* Graphics.
+* Pretty graphics. http://www.youtube.com/watch?v=-PsQqpK0MvM&list=UUutMBmI_ydvgmzbkQxbI4IQ&index=9&feature=plcp
+* GUI. Picking and examining Pets, etc.
 * Ancestry tracking. Useful for statistics.

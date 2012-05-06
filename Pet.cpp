@@ -9,66 +9,202 @@
 #include "SensoryInput.h"
 
 #include <stdlib.h>
+#include <cfloat>
+#include <algorithm>
 
 
-PetIntention Pet::getPetIntentionForSensoryInput(SensoryInput sensory){
-	//		collectInput();
-	//		processInput();
-	//		respondToInput();
+const int Pet::numLayers = 1;
+const int Pet::layerSize = 6;
+const int Pet::numInputNeurons = numRelativeDirections;
+const int Pet::numOutputNeurons = numRelativeDirections;
+
+
+Pet::Pet() : energy(0.5), maxEnergy(1) {
 	
-	RelativeDirection relativeDirection;
+	// Initialize all neuron connections randomly.
 	
-	// Pick direction randomly, preferring forward, but turning (forward) left or right sometimes.
-	float random = rand() / (float) RAND_MAX;
-	if(random < .1) {
-		relativeDirection = forwardLeft;
-	} else if(random < .1+.1) {
-		relativeDirection = forwardRight;
-	} else {
-		relativeDirection = forward;
-	}
-
-	// Use all directions as backup in case the preferred one is blocked.		
-	RelativeDirection backupRelativeDirections[] = {
-		forward,
-		forwardLeft,
-		forwardRight,
-		backwardLeft,
-		backwardRight,
-		backward
-	};
-	for(int i=0; i<6; ++i){
-		WorldCell cell = sensory.touchedCells[relativeDirection];
-		if(cell.pet || cell.impassable){
-			relativeDirection = backupRelativeDirections[i];
-		} else {
-			break;
+	inputConnections.resize(layerSize);
+	for (int i = 0; i < layerSize; ++i) {
+		inputConnections[i].resize(numInputNeurons);
+		for (int j = 0; j < numInputNeurons; ++j) {
+			inputConnections[i][j] = (rand() / (float) RAND_MAX) * 2 - 1;
 		}
 	}
 	
-	return PetIntention(static_cast<Action>(mate | battle | move), relativeDirection);
+	outputConnections.resize(layerSize);
+	for (int i = 0; i < layerSize; ++i) {
+		outputConnections[i].resize(numOutputNeurons);
+		for (int j = 0; j < numOutputNeurons; ++j) {
+			outputConnections[i][j] = (rand() / (float) RAND_MAX) * 2 - 1;
+		}
+	}
+	
+	processingConnections.resize(numLayers);
+	for (int k = 0; k < numLayers; ++k) {
+		processingConnections[k].resize(layerSize);
+		for (int i = 0; i < layerSize; ++i) {
+			processingConnections[k][i].resize(layerSize);
+			for (int j = 0; j < layerSize; ++j) {
+				processingConnections[k][i][j] = (rand() / (float) RAND_MAX) * 2 - 1;
+			}
+		}
+	}
+}
+
+/*
+Pet::Pet(Pet &a, Pet &b) {
+	
+	// Cross parents a and b.
+	
+	inputConnections.resize(layerSize);
+	for (int i = 0; i < layerSize; ++i) {
+		inputConnections[i].resize(numInputNeurons);
+		for (int j = 0; j < numInputNeurons; ++j) {
+			float rand() / (float) RAND_MAX
+			inputConnections[i][j] = ;
+		}
+	}
+	
+	outputConnections.resize(layerSize);
+	for (int i = 0; i < layerSize; ++i) {
+		outputConnections[i].resize(numOutputNeurons);
+		for (int j = 0; j < numOutputNeurons; ++j) {
+			outputConnections[i][j] = (rand() / (float) RAND_MAX) * 2 - 1;
+		}
+	}
+	
+	processingConnections.resize(numLayers);
+	for (int k = 0; k < numLayers; ++k) {
+		processingConnections[k].resize(layerSize);
+		for (int i = 0; i < layerSize; ++i) {
+			processingConnections[k][i].resize(layerSize);
+			for (int j = 0; j < layerSize; ++j) {
+				processingConnections[k][i][j] = (rand() / (float) RAND_MAX) * 2 - 1;
+			}
+		}
+	}
+	
+}
+*/
+
+PetIntention Pet::getPetIntentionForSensoryInput(SensoryInput sensory){
+
+	// Collect data into an easy to access array.
+	float inputNeurons[numRelativeDirections];
+	for (RelativeDirection relativeDirection = firstRelativeDirection; relativeDirection < numRelativeDirections; ++relativeDirection) {
+		
+		inputNeurons[relativeDirection] = sensory.touchedCells[relativeDirection].pet ? 1 : 0;
+		
+	}
+	
+	// Make the input symmetric.
+	/*
+	 
+	             b c 
+	 forward -> a * d
+	             B C
+	 
+	 Instead of sampling b, B, c, C... I sample b-B, b+B, c-C, c+C... to make the nn more insensitive to mirroring.
+	 This is done along both the left/right and forward/backward axis.
+	 
+	 */
+	differenceAndSumFromAbsolutes(inputNeurons[forwardLeft],  inputNeurons[forwardRight]);
+	differenceAndSumFromAbsolutes(inputNeurons[backwardLeft], inputNeurons[backwardRight]);
+	differenceAndSumFromAbsolutes(inputNeurons[forwardLeft],  inputNeurons[backwardLeft]);
+	differenceAndSumFromAbsolutes(inputNeurons[forwardRight], inputNeurons[backwardRight]);
+	differenceAndSumFromAbsolutes(inputNeurons[forward],      inputNeurons[backward]);
+
+	// Think it over.
+	float outputNeurons[numRelativeDirections];
+	processInput(inputNeurons, outputNeurons);
+
+	// Translate from mirror-insensitive output to direct values.
+	absolutesFromdifferenceAndSum(outputNeurons[forward],      outputNeurons[backward]);
+	absolutesFromdifferenceAndSum(outputNeurons[forwardRight], outputNeurons[backwardRight]);
+	absolutesFromdifferenceAndSum(outputNeurons[forwardLeft],  outputNeurons[backwardLeft]);
+	absolutesFromdifferenceAndSum(outputNeurons[backwardLeft], outputNeurons[backwardRight]);
+	absolutesFromdifferenceAndSum(outputNeurons[forwardLeft],  outputNeurons[forwardRight]);
+
+	// Translate neuron output to PetIntention. (Find the neuron with the largest output. Each neuron represents a direction.)
+	float maxOutput = FLT_MIN;
+	RelativeDirection intendedRelativeDirection = forward;
+	for (RelativeDirection relativeDirection = firstRelativeDirection; relativeDirection < numRelativeDirections; ++relativeDirection) {
+
+		if (outputNeurons[relativeDirection] > maxOutput) {
+			maxOutput = outputNeurons[relativeDirection];
+			intendedRelativeDirection = relativeDirection;
+		}
+	}
+	
+	return PetIntention(static_cast<Action>(mate | battle | move), intendedRelativeDirection);
 }
 
 
+void Pet::differenceAndSumFromAbsolutes(float &a, float &b) {
+	
+	float s1 = a - b;
+	float s2 = a + b;
+	
+	a = s1;
+	b = s2;
+}
 
-/*
- 
- f   G   H
- g   b   C   I
- h	c  a  D   J
- i   d   e   K
- j   k   l
- 
- 
- a
- b-B
- b+B
- c-C
- c+C
- ...
- 
- Instead of sampling b, B, c, C... I sample b-B, b+B, c-C, c+C... to make the nn insensitive to direction.
- */
+void Pet::absolutesFromdifferenceAndSum(float &s1, float &s2) {
+	
+	float a = (s1 + s2) / 2;
+	float b = (s2 - s1) / 2;
+	
+	s1 = a;
+	s2 = b;
+}
+
+
+void Pet::processInput(float inputNeurons[], float outputNeurons[]) {
+
+	float processingNeuronsA[layerSize];
+	float processingNeuronsB[layerSize];
+	
+	float *processingNeuronsRead = processingNeuronsA;
+	float *processingNeuronsWrite = processingNeuronsB;
+	
+	// First layer takes input directly from input neurons.
+	for (int write = 0; write < layerSize; ++write) {
+		processingNeuronsWrite[write] = 0;
+		for (int read = 0; read < numInputNeurons; ++read) {
+			processingNeuronsWrite[write] = inputNeurons[read] * inputConnections[write][read];
+		}
+	}
+	
+	// Propagate through the rest of the processing layers.
+	for (int layer=1; layer<numLayers; ++layer) {
+
+		// Reuse the two layers of neurons. Much like double-buffered graphics.
+		std::swap(
+				  processingNeuronsRead,
+				  processingNeuronsWrite
+				  );
+	
+		for (int write = 0; write < layerSize; ++write) {
+			processingNeuronsWrite[write] = 0;
+			for(int read = 0; read < layerSize; ++read)
+				processingNeuronsWrite[write] += processingNeuronsRead[read] * processingConnections[layer][write][read];
+		}
+	}
+	
+	// Output neurons read from the last layer.
+	std::swap(
+			  processingNeuronsRead,
+			  processingNeuronsWrite
+			  );
+	for (int write = 0; write < numOutputNeurons; ++write) {
+		outputNeurons[write] = 0;
+		for (int read = 0; read < layerSize; ++read) {
+			outputNeurons[write] = processingNeuronsRead[read] * outputConnections[write][read];
+		}
+	}
+}
+
+
 
 
 //	const int numLayers = 1; // Arbitrary
@@ -104,26 +240,3 @@ PetIntention Pet::getPetIntentionForSensoryInput(SensoryInput sensory){
 //	}
 
 
-//	void processInput(){
-//		// First layer takes input directly from input neurons.
-//		for(int write=0; write<layerSize; ++write){
-//			processingNeurons[write] = 0;
-//			for(int read=0; read<numInputNeurons; ++read)
-//				processingNeurons[write] = inputNeurons[read] * inputConnections[write*layerSize + read];
-//		}
-//
-//		// Propagate through the rest of the processing layers.
-//		for(int layer=1; layer<numLayers; ++layer)
-//			for(int write=0; write<layerSize; ++write){
-//				processingNeurons[layer*layerSize + write] = 0;
-//				for(int read=0; read<layerSize; ++read)
-//					processingNeurons[layer*layerSize + write] += processingNeurons[(layer-1)*layerSize + read] * processingConnections[write*layerSize + read];
-//			}
-//
-//		// Output neurons read from the last layer.
-//		for(int write=0; write<numOutputNeurons; ++write){
-//			outputNeurons[write] = 0;
-//			for(int read=0; read<layerSize; ++read)
-//				outputNeurons[write] = processingNeurons[(numLayers-1)*layerSize + read] * outputConnections[read*layerSize + write];
-//		}
-//	}
