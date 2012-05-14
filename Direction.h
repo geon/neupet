@@ -1,11 +1,9 @@
 #ifndef DIRECTION
 #define DIRECTION
 
-class X { };
-
-
 enum Direction {
-	left,
+	firstDirection = 0,
+	left = firstDirection,
 	upLeft,
 	upRight,
 	right,

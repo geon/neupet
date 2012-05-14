@@ -5,6 +5,10 @@
 #include <algorithm>
 
 
+const float World::liveEnergy = 1/2000;
+const float World::moveEnergy = 1/1000;
+const float World::breedEnergy = 0.5;
+
 World::World(){
 	
 	buildCage(6);
@@ -117,8 +121,7 @@ void World::generatePopulation(int numPets){
 		int position = i * (width*height)/(float)numPets;
 		cells[position].pet = pet;
 		pets.push_back(pet);
-		petPositions[pet] = position;
-		petDirections[pet] = static_cast<Direction>(rand() % numDirections);
+		petStates[pet] = PetState(position, static_cast<Direction>(rand() % numDirections), 1);
 	}
 }
 
@@ -128,7 +131,7 @@ void World::sprinklePlants(int numPlants){
 		int position = rand() % (width*height);
 		WorldCell &cell = cells[position];
 		
-		cell.plantGrowth = 0.01;
+		cell.plantGrowth = 0.005;
 		cell.plantEnergy = cell.plantMaxEnergy * rand() / (float) RAND_MAX;
 	}
 }
@@ -151,7 +154,7 @@ void World::render(){
 			WorldCell &cell = cells[coordinateToIndex(x, y)];
 			
 			// Mark any occupied cell.
-			std::cout << (cell.pet ? (cell.pet->energy > 0 ? '*' : 'o') : (cell.impassable ? 'X' : (cell.plantEnergy > 0 ? (cell.plantEnergy > 0.5 ? 'A' : '^') : ' ')));
+			std::cout << (cell.pet ? (petStates[cell.pet].energy > 0 ? '*' : 'o') : (cell.impassable ? 'X' : (cell.plantEnergy > 0 ? (cell.plantEnergy > 0.5 ? 'A' : '^') : ' ')));
 			
 			// Spacing for hexagonal layout.
 			std::cout << ' ';
@@ -181,38 +184,65 @@ void World::step(){
 
 void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 	
-	int currentPosition = petPositions[pet];
+	PetState &currentState = petStates[pet];
+	PetState newState = currentState;
+
+	// Just staying alive takes energy.
+	newState.energy -= liveEnergy;
 
 	// Eat plants.
-	pet->energy += cells[currentPosition].plantEnergy;
-	pet->energy -= 0.01;
-	pet->energy = std::min(pet->energy, pet->maxEnergy);
-	cells[currentPosition].plantEnergy = 0;
+	newState.energy += cells[currentState.position].plantEnergy;
+	cells[currentState.position].plantEnergy = 0;
 
-	if (pet->energy > 0) {
-		Direction oldDirection = petDirections[pet];
+	if (currentState.energy > 0) {
+		Direction oldDirection = currentState.direction;
 		Direction newDirection = offsetDirectionByRelativeDirection(oldDirection, petIntention.relativeDirection);
 		
-		int newPosition = currentPosition;
+		// Calculate the target position.
+		int newPosition = movePosition(currentState.position, newDirection);
 		
-		// Does the Pet want to move?
-		if (petIntention.action && move) {
+		// Does the Pet want to mate, and is it possible?
+		if ((petIntention.action & mate) && cells[newPosition].pet && currentState.energy > breedEnergy) {
 			
-			// Calculate the target position.
-			newPosition = movePosition(currentPosition, newDirection);
+			// Mate
+			for (Direction direction = firstDirection; direction < numDirections; ++direction) {
+				int neighbourPosition = movePosition(currentState.position, direction);
+				WorldCell &cell = cells[neighbourPosition];
+				if (!cell.pet && !cell.impassable) {
+					Pet *child = new Pet(*pet, *(cells[newPosition].pet));
+					cell.pet = child;
+					pets.push_front(child); // push_front is OK, but not push_back, since the list is being itterated over while this function is called.
+					petStates[child] = PetState(neighbourPosition, direction, breedEnergy / 5);
+					break;
+				}
+			}
+			cells[currentState.position].pet = NULL;
+			cells[newPosition].pet = pet;
 			
-			// Is it possible to move there?
-			if (!cells[newPosition].pet && !cells[newPosition].impassable) {
-				
-				// Actually move.
-				
-				cells[currentPosition].pet = NULL;
-				cells[newPosition].pet = pet;
-				
-				petDirections[pet] = newDirection;
-				petPositions[pet] = newPosition;
-			}		
+			newState.energy -= breedEnergy;
+		}
+		// Does the Pet want to move, and is it possible?
+		else if ((petIntention.action & move) && ((!cells[newPosition].pet || petStates[cells[newPosition].pet].energy < 0.001) && !cells[newPosition].impassable)) {
+			
+			// Eat corpses.
+			if (cells[newPosition].pet && petStates[cells[newPosition].pet].energy > 0) {
+				newState.energy += petStates[cells[newPosition].pet].energy;
+				pets.remove(cells[newPosition].pet);
+				petStates.erase(cells[newPosition].pet);
+			}
+			
+			// Actually move.
+			newState.direction = newDirection;
+			newState.position = newPosition;
+			newState.energy -= moveEnergy;
 		}
 	}
+
+	// Clamp the Pet's energy.
+	newState.energy = std::min(newState.energy, newState.maxEnergy);
 	
+	// Update the stored PetState and WorldCell pointer.
+	cells[currentState.position].pet = NULL;
+	cells[newState.position].pet = pet;
+	petStates[pet] = newState;
 }

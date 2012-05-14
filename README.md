@@ -27,16 +27,15 @@ TODO
 
 ### World/Pet Sophistication
 
-* Basic mating for evolution of neural network.
+* Artificcially keep the population up. (Add copies of randomly sampled Pets.)
 * Health, Strength, Metabolism, Mass etc. interacting with each other.
 * Battles & Mating - Add a flag for each so the Pet can signal if it is violent or "in heat". Violent Pets will battle anything it moves into. Pets in heat will mate if running into another Pet in heat.
-* Energy consumption depending on action. Less for staying still, more for fighting and pregnancy.
 * Make Pets sense the direction other Pets are facing. This will enable flocking.
 * Water (with Pets able to traverse water or land by varying speed? Value for how land or water-bound they are? Some Pets amphibious. How to ballance it?)
 * WorldCell height - (Replaces impassable walls and water (water level = 0).) Higher energy consumption uphill, impossible to climb too steep hills (gradient > 1), dangerous drops. (Needs 3D (or 2.5D) graphics.)
 * Speciation. Add an input for how many genes a pair of Pets share.
 * New senses.
-	* Sight (1/distance to closest Pet) in n directions over m degrees of FOV. Multiple channels for food, mate and danger?
+	* Sight (1/distance to closest Pet) in n directions over m degrees of FOV. Multiple channels for food, mate, wall and danger?
 	* Smell - Each world cell should have the smell of the last occupant. Outputs to the visiting Pet is the strenght of the smell, and the gene similarity to itself. (?)
 
 ### Misc.
@@ -45,3 +44,28 @@ TODO
 * Pretty graphics. http://www.youtube.com/watch?v=-PsQqpK0MvM&list=UUutMBmI_ydvgmzbkQxbI4IQ&index=9&feature=plcp
 * GUI. Picking and examining Pets, etc.
 * Ancestry tracking. Useful for statistics.
+
+
+### Life "Rules"
+
+This will be impotant to make the simulation sensislbe. They are the laws of physics in the World.
+
+#### Genetically controlled values
+
+* birthIdealMass - Mass of Pet at birth.
+* targetIdealMass - Mass of fully grown Pet.
+* growthRate
+* childrenPerBirth
+
+#### Simulation controlled values
+
+* energyConversionFactor = 10
+* breedEnergy - birthIdealMass * childrenPerBirth * energyConversionFactor
+* idealMass - 
+* maxMass = Target+50%, minMass )
+* mass - (Mass gained by eating = mass of food / energyConversionFactor)
+
+
+* Energy Content/nutriciency => directly proportional to Mass.
+* Greater mass => longer pregnancy (directly proportional, plus constant) http://www.applet-magic.com/gestation.htm
+* Greater mass => greater strength (mass^1/3 proportional to strength^1/2 ?)

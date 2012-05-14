@@ -8,7 +8,7 @@
 #include "WorldCell.h"
 #include "Pet.h"
 #include "PetIntention.h"
-
+#include "PetState.h"
 
 #include <list>
 #include <map>
@@ -27,8 +27,7 @@ class World{
 
 	WorldCell cells[width*height];
 	std::list<Pet *> pets;
-	std::map<Pet *, int> petPositions;
-	std::map<Pet *, Direction> petDirections;
+	std::map<Pet *, PetState> petStates;
 	
 	public:
 
@@ -42,6 +41,10 @@ class World{
 	void render();
 	void step();
 	void applyPetIntentionToPet(Pet *pet, PetIntention petIntention);
+	
+	static const float liveEnergy;
+	static const float moveEnergy;
+	static const float breedEnergy;
 };
 
 #endif

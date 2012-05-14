@@ -12,7 +12,7 @@ class Pet{
 public:
 	
  	Pet();
-// 	Pet(Pet &a, Pet &b);
+ 	Pet(Pet &a, Pet &b);
 	PetIntention getPetIntentionForSensoryInput(SensoryInput sensory);
 
 	void collectInput(SensoryInput sensory);
@@ -33,10 +33,6 @@ public:
 	std::vector<std::vector<float> > inputConnections;
 	std::vector<std::vector<std::vector<float> > > processingConnections;
 	std::vector<std::vector<float> > outputConnections;
-	
-//	float breedingEnergy = 0.2;
-	float energy;
-	float maxEnergy;
 };
 
 #endif
