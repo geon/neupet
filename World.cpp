@@ -6,8 +6,8 @@
 #include <list>
 
 
-const float World::liveEnergy = 1/2000;
-const float World::moveEnergy = 1/1000;
+const float World::liveEnergy = 1.0/200;
+const float World::moveEnergy = 1.0/100;
 const float World::breedEnergy = 0.5;
 
 World::World(){
@@ -207,7 +207,7 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 		int newPosition = movePosition(currentState.position, newDirection);
 		
 		// Does the Pet want to mate, and is it possible?
-		if ((petIntention.action & mate) && cells[newPosition].pet && currentState.energy > breedEnergy) {
+		if ((petIntention.action & mate) && cells[newPosition].pet && newState.energy > breedEnergy) {
 			
 			// Mate
 			for (Direction direction = firstDirection; direction < numDirections; ++direction) {
@@ -226,8 +226,13 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 		else if ((petIntention.action & move) && ((!cells[newPosition].pet || !petStates[cells[newPosition].pet].isAlive()) && !cells[newPosition].impassable)) {
 			
 			// Eat corpses.
-			if (cells[newPosition].pet && petStates[cells[newPosition].pet].energy > 0) {
-				newState.energy += petStates[cells[newPosition].pet].energy;
+			if (cells[newPosition].pet) {
+
+				// Just in case the energy is negative.
+				if (petStates[cells[newPosition].pet].energy > 0) {
+					newState.energy += petStates[cells[newPosition].pet].energy;
+				}
+				
 				pets.remove(cells[newPosition].pet);
 				petStates.erase(cells[newPosition].pet);
 			}
@@ -295,36 +300,29 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 int World::addPetAndPlaceRandomly(Pet *newPet, PetState newState) {
 
 	// Walk over the list until a living Pet is found, max one lap. 
-	int position = -1;
 	int worldSize = width * height;
 	int randomStartPosition = rand() % worldSize;
 	for (int i = 0; i < worldSize; ++i) {
 
 		int currentPosition = (randomStartPosition + i) % worldSize;
 
-		// Check if the position is already occupied.
-		if (!cells[currentPosition].pet) {
+		// Try to place it here.
+		newState.position = currentPosition;
+		if (addPet(newPet, newState)) {
 
-			// If not, take it.
-			position = currentPosition;
-			break;
+			return currentPosition;
 		}
 	}
 
-	// Place the pet in the position if it is valid.
-	if (position >= 0) {
-		newState.position = position;
-		addPet(newPet, newState);
-	}
-
-	return position;
+	// No valid position was found, so return an invalid position.
+	return -1;
 }
 
 
 bool World::addPet(Pet *newPet, PetState const &newState) {
 	
-	// refuse to add Pets at positions already occupied.
-	if (cells[newState.position].pet) {
+	// Refuse to add Pets at any position already occupied by a living Pet.
+	if (cells[newState.position].pet && petStates[cells[newState.position].pet].isAlive()) {
 		return false;
 	}
 	

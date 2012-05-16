@@ -19,8 +19,14 @@ int main()
 	world.sprinklePlants(100);
 	world.render();
 
+	
 	while(std::cin.get() != 'q'){
-		world.step();
+
+		const int stepsPerFrame = 1;
+		for (int i = 0; i < stepsPerFrame; ++i) {
+			world.step();
+		}
+
 		world.render();
 	}
 
