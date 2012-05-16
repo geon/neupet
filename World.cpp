@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <list>
 
 
 const float World::liveEnergy = 1/2000;
@@ -116,12 +117,15 @@ void World::buildCage(int sideLength){
 
 
 void World::generatePopulation(int numPets){
+
+	// Generate numPets Pets.
 	for(int i=0; i<numPets && i<width*height; ++i){
-		Pet *pet = new Pet();
-		int position = i * (width*height)/(float)numPets;
-		cells[position].pet = pet;
-		pets.push_back(pet);
-		petStates[pet] = PetState(position, static_cast<Direction>(rand() % numDirections), 1);
+
+		if (0 > addPetAndPlaceRandomly(new Pet(), PetState(0, static_cast<Direction>(rand() % numDirections), 1))) {
+			
+			// Stop if no more pets can fit.
+			break;
+		}
 	}
 }
 
@@ -187,14 +191,15 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 	PetState &currentState = petStates[pet];
 	PetState newState = currentState;
 
-	// Just staying alive takes energy.
-	newState.energy -= liveEnergy;
+	if (currentState.isAlive()) {
 
-	// Eat plants.
-	newState.energy += cells[currentState.position].plantEnergy;
-	cells[currentState.position].plantEnergy = 0;
-
-	if (currentState.energy > 0) {
+		// Eat plants.
+		newState.energy += cells[currentState.position].plantEnergy;
+		cells[currentState.position].plantEnergy = 0;
+		
+		// Clamp the Pet's energy.
+		newState.energy = std::min(newState.energy, newState.maxEnergy);
+		
 		Direction oldDirection = currentState.direction;
 		Direction newDirection = offsetDirectionByRelativeDirection(oldDirection, petIntention.relativeDirection);
 		
@@ -210,19 +215,15 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 				WorldCell &cell = cells[neighbourPosition];
 				if (!cell.pet && !cell.impassable) {
 					Pet *child = new Pet(*pet, *(cells[newPosition].pet));
-					cell.pet = child;
-					pets.push_front(child); // push_front is OK, but not push_back, since the list is being itterated over while this function is called.
-					petStates[child] = PetState(neighbourPosition, direction, breedEnergy / 5);
+					addPet(child, PetState(neighbourPosition, direction, breedEnergy / 6));
 					break;
 				}
 			}
-			cells[currentState.position].pet = NULL;
-			cells[newPosition].pet = pet;
 			
 			newState.energy -= breedEnergy;
 		}
 		// Does the Pet want to move, and is it possible?
-		else if ((petIntention.action & move) && ((!cells[newPosition].pet || petStates[cells[newPosition].pet].energy < 0.001) && !cells[newPosition].impassable)) {
+		else if ((petIntention.action & move) && ((!cells[newPosition].pet || !petStates[cells[newPosition].pet].isAlive()) && !cells[newPosition].impassable)) {
 			
 			// Eat corpses.
 			if (cells[newPosition].pet && petStates[cells[newPosition].pet].energy > 0) {
@@ -231,18 +232,105 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 				petStates.erase(cells[newPosition].pet);
 			}
 			
+			// Clamp the Pet's energy.
+			newState.energy = std::min(newState.energy, newState.maxEnergy);
+
 			// Actually move.
 			newState.direction = newDirection;
 			newState.position = newPosition;
 			newState.energy -= moveEnergy;
 		}
+
+		// Just staying alive takes energy.
+		newState.energy -= liveEnergy;
+		
+		// Handle death.
+		if (!newState.isAlive()) {
+			
+			// Replace the dead Pet with a copy of one random living Pet, to top up the population.
+			
+			Pet *original = 0;
+			
+			std::list<Pet*>::iterator candidate = pets.begin();
+
+			// Begin at a random position.
+			std::advance(candidate, rand() % pets.size());
+			
+			// Walk over the list until a living Pet is found, max one lap. 
+			for (int i = 0; i < pets.size(); ++i) {
+				
+				// Make sure the Pet to copy is alive.
+				if (petStates[*candidate].isAlive()) {
+					
+					original = *candidate;
+					break;
+					
+				} else {
+					
+					// The Pet is dead, so skip to the next.
+					++candidate;
+					
+					// Loop at the end of the list.
+					if (candidate == pets.end()) {
+						candidate = pets.begin();
+					}
+				}
+			}
+			
+			// Copy the original.
+			if (original) {
+				Pet *copy = new Pet(*original);
+				addPetAndPlaceRandomly(copy, petStates[original]);
+			}
+		}
+
+		// Update the stored PetState and WorldCell pointer.
+		cells[currentState.position].pet = 0;
+		cells[newState.position].pet = pet;
+		petStates[pet] = newState;
+	}
+}
+
+
+int World::addPetAndPlaceRandomly(Pet *newPet, PetState newState) {
+
+	// Walk over the list until a living Pet is found, max one lap. 
+	int position = -1;
+	int worldSize = width * height;
+	int randomStartPosition = rand() % worldSize;
+	for (int i = 0; i < worldSize; ++i) {
+
+		int currentPosition = (randomStartPosition + i) % worldSize;
+
+		// Check if the position is already occupied.
+		if (!cells[currentPosition].pet) {
+
+			// If not, take it.
+			position = currentPosition;
+			break;
+		}
 	}
 
-	// Clamp the Pet's energy.
-	newState.energy = std::min(newState.energy, newState.maxEnergy);
+	// Place the pet in the position if it is valid.
+	if (position >= 0) {
+		newState.position = position;
+		addPet(newPet, newState);
+	}
+
+	return position;
+}
+
+
+bool World::addPet(Pet *newPet, PetState const &newState) {
 	
-	// Update the stored PetState and WorldCell pointer.
-	cells[currentState.position].pet = NULL;
-	cells[newState.position].pet = pet;
-	petStates[pet] = newState;
+	// refuse to add Pets at positions already occupied.
+	if (cells[newState.position].pet) {
+		return false;
+	}
+	
+	cells[newState.position].pet = newPet;
+	pets.push_front(newPet); // push_front is OK, but not push_back, since the list "pets" is being itterated over while this function is called.
+	petStates[newPet] = newState;
+	
+	return true;
 }

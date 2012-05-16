@@ -13,6 +13,8 @@ struct PetState{
 	
 	float energy;
 	float maxEnergy;
+	
+	bool isAlive();
 };
 
 #endif

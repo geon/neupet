@@ -21,15 +21,19 @@ TODO
 
 ### World/Pet Interaction
 
-* Move Pet energy levels to World, and bundle in a PetState struct. Supply as SensoryInput.
 * Interface for the Pet position and direction, energy levels etc. in World.
-* Split the plant logic to separate class with generic base class. (?)
+* Split the plant logic to separate class with generic base class. (?) Not fun.
 
 ### World/Pet Sophistication
 
-* Artificcially keep the population up. (Add copies of randomly sampled Pets.)
-* Health, Strength, Metabolism, Mass etc. interacting with each other.
+* Health, Strength, Metabolism, Mass etc. interacting with each other. Dead Pets should still contain some energy to be useful as food.
 * Battles & Mating - Add a flag for each so the Pet can signal if it is violent or "in heat". Violent Pets will battle anything it moves into. Pets in heat will mate if running into another Pet in heat.
+* Bundle the Pet and PetState into a common stuct for storage in World. Makes the std::map from Pet to PetState unnecesary.
+* Separate the list of Pets into dead and living. Dont calculate PetIntention for dead Pets.
+* Decompose dead pets slowly.
+* Decomposing Pets should seep into the ground, adding nutricients (pland growth rate) for plants.
+* Plants should deplete the nutricients of the ground.
+* Pooping Pets add fertilizer to the ground?
 * Make Pets sense the direction other Pets are facing. This will enable flocking.
 * Water (with Pets able to traverse water or land by varying speed? Value for how land or water-bound they are? Some Pets amphibious. How to ballance it?)
 * WorldCell height - (Replaces impassable walls and water (water level = 0).) Higher energy consumption uphill, impossible to climb too steep hills (gradient > 1), dangerous drops. (Needs 3D (or 2.5D) graphics.)
@@ -65,7 +69,8 @@ This will be impotant to make the simulation sensislbe. They are the laws of phy
 * maxMass = Target+50%, minMass )
 * mass - (Mass gained by eating = mass of food / energyConversionFactor)
 
+#### Calculated values
 
-* Energy Content/nutriciency => directly proportional to Mass.
+* Energy content/nutriciency => directly proportional to Mass.
 * Greater mass => longer pregnancy (directly proportional, plus constant) http://www.applet-magic.com/gestation.htm
 * Greater mass => greater strength (mass^1/3 proportional to strength^1/2 ?)
