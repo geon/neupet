@@ -196,7 +196,7 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 	cells[currentState.position].plantEnergy = 0;
 	
 	// Clamp the Pet's energy.
-	newState.energy = std::min(newState.energy, newState.maxEnergy);
+	newState.energy = std::min(newState.energy, PetState::maxEnergy);
 	
 	Direction oldDirection = currentState.direction;
 	Direction newDirection = offsetDirectionByRelativeDirection(oldDirection, petIntention.relativeDirection);
@@ -238,7 +238,7 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 		}
 		
 		// Clamp the Pet's energy.
-		newState.energy = std::min(newState.energy, newState.maxEnergy);
+		newState.energy = std::min(newState.energy, PetState::maxEnergy);
 		
 		// Actually move.
 		newState.direction = newDirection;
