@@ -18,6 +18,9 @@ World::~World(){
 		delete *i;
 	}
 	
+	for(std::list<Pet *>::iterator i=petArchive.begin(); i != petArchive.end(); ++i){
+		delete *i;
+	}
 }
 
 
@@ -112,12 +115,25 @@ void World::buildCage(int sideLength){
 }
 
 
-void World::generatePopulation(int numPets){
+void World::regeneratePopulation(){
 
-	// Generate numPets Pets.
-	for(int i=0; i<numPets && i<width*height; ++i){
+	// Generate Pets t ofill up the initialPopulationSize.
+	for(int i=0; i<initialPopulationSize && i<width*height; ++i){
 
-		if (0 > addPetAndPlaceRandomly(new Pet(), PetState(0, static_cast<Direction>(rand() % numDirections), 1))) {
+		Pet *pet = 0;
+		
+		// Reuse the recently dead pets.
+		if (!petArchive.empty()) {
+			petArchive.back();
+			petArchive.pop_back();
+		}
+		
+		// Create new ones if the archive is not large enough.
+		if (!pet) {
+			pet = new Pet();
+		}
+		
+		if (0 > addPetAndPlaceRandomly(pet, PetState(0, static_cast<Direction>(rand() % numDirections), 1))) {
 			
 			// Stop if no more pets can fit.
 			break;
@@ -154,7 +170,7 @@ void World::render(){
 			WorldCell &cell = cells[coordinateToIndex(x, y)];
 			
 			// Mark any occupied cell.
-			std::cout << (cell.pet ? (petStates[cell.pet].energy > 0 ? '*' : 'o') : (cell.impassable ? 'X' : (cell.plantEnergy > 0 ? (cell.plantEnergy > 0.5 ? 'A' : '^') : ' ')));
+			std::cout << (cell.pet ? (petStates[cell.pet].isAlive() ? '*' : 'o') : (cell.impassable ? 'X' : (cell.plantEnergy > 0 ? (cell.plantEnergy > 0.5 ? 'A' : '^') : ' ')));
 			
 			// Spacing for hexagonal layout.
 			std::cout << ' ';
@@ -166,14 +182,22 @@ void World::render(){
 
 void World::step(){
 	
+	int numAlivePets = 0;
+	
 	// Update alive Pets.
 	for(std::list<Pet *>::iterator i = pets.begin(); i != pets.end(); ++i){
 
 		Pet *pet = *i;
 		
 		if (petStates[pet].isAlive()) {
+
 			applyPetIntentionToPet(pet, pet->getPetIntentionForSensoryInput(SensoryInput(this, pet)));
+			++numAlivePets;
 		}
+	}
+
+	if (numAlivePets < 2) {
+		regeneratePopulation();
 	}
 	
 	// Update WorldCells.
@@ -249,6 +273,9 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 	// Just staying alive takes energy.
 	newState.energy -= PetState::liveEnergy;
 	
+	// Age the pet.
+	++newState.age;
+	
 	// Handle death.
 	if (!newState.isAlive()) {
 
@@ -304,5 +331,7 @@ void World::removePet(Pet *pet) {
 	pets.remove(pet);
 	petStates.erase(pet);
 	
-	delete pet;
+	petArchive.push_back(pet);
 }
+
+

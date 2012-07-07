@@ -15,7 +15,7 @@ int main()
 	std::cin >> numPets;
 
 	World world;
-	world.generatePopulation(numPets);
+//	world.generatePopulation(numPets);
 	world.sprinklePlants(100);
 	world.render();
 
@@ -25,6 +25,15 @@ int main()
 		int stepsPerFrame = 1;
 		if (command == 'c') {
 			stepsPerFrame = 100;
+		}
+		if (command == 'm') {
+			stepsPerFrame = 1000;
+		}
+		if (command == 'v') {
+			stepsPerFrame = 10000;
+		}
+		if (command == 'b') {
+			stepsPerFrame = 100000;
 		}
 		
 		for (int i = 0; i < stepsPerFrame; ++i) {

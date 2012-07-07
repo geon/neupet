@@ -21,8 +21,6 @@ TODO
 
 ### World/Pet Interaction
 
-* Make the world generate a new population from the last n surviving pets.
-* Change the PetState::maxAge to a genetic variable, or PetState::maxEnergy to a constant. Figure out how they should be balanced/capped.
 * Interface for the Pet position and direction, energy levels etc. in World.
 * Split the plant logic to separate class with generic base class. (?) Not fun.
 

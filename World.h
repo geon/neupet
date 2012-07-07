@@ -22,15 +22,18 @@ class World{
 	
 	static const int width = 30;
 	static const int height = 20;
+	static const int initialPopulationSize = 30;
 
 //	protected:
 
 	WorldCell cells[width*height];
 	std::list<Pet *> pets;
 	std::map<Pet *, PetState> petStates;
+	std::list<Pet *> petArchive;
 	
 	bool addPet(Pet *newPet, PetState const &newState);
 	void removePet(Pet *pet);
+	void regeneratePopulation();
 	
 	public:
 
@@ -39,7 +42,6 @@ class World{
 	Direction offsetDirectionByRelativeDirection(Direction direction, RelativeDirection relativeDirection);
 
 	void buildCage(int sideLength);
-	void generatePopulation(int numPets);
 	void sprinklePlants(int numPlants);
 	int addPetAndPlaceRandomly(Pet *newPet, PetState newState);
 	void render();
