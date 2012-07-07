@@ -45,10 +45,6 @@ class World{
 	void render();
 	void step();
 	void applyPetIntentionToPet(Pet *pet, PetIntention petIntention);
-	
-	static const float liveEnergy;
-	static const float moveEnergy;
-	static const float breedEnergy;
 };
 
 #endif

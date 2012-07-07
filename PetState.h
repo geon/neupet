@@ -5,6 +5,11 @@
 
 struct PetState{
 	
+	static const float liveEnergy;
+	static const float moveEnergy;
+	static const float breedEnergy;
+	static const int maxAge;
+
 	PetState();
 	PetState(int position, Direction direction, float energy);
 	
@@ -13,7 +18,9 @@ struct PetState{
 	
 	float energy;
 	float maxEnergy;
-	
+
+	int age;
+
 	bool isAlive();
 };
 

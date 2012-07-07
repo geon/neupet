@@ -20,9 +20,13 @@ int main()
 	world.render();
 
 	
-	while(std::cin.get() != 'q'){
+	while(char command = std::cin.get() != 'q'){
 
-		const int stepsPerFrame = 1;
+		int stepsPerFrame = 1;
+		if (command == 'c') {
+			stepsPerFrame = 100;
+		}
+		
 		for (int i = 0; i < stepsPerFrame; ++i) {
 			world.step();
 		}

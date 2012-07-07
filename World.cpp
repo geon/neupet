@@ -6,10 +6,6 @@
 #include <list>
 
 
-const float World::liveEnergy = 1.0/200;
-const float World::moveEnergy = 1.0/100;
-const float World::breedEnergy = 0.5;
-
 World::World(){
 	
 	buildCage(6);
@@ -171,7 +167,7 @@ void World::render(){
 void World::step(){
 	
 	// Update alive Pets.
-	for(std::list<Pet *>::iterator i=pets.begin(); i != pets.end(); ++i){
+	for(std::list<Pet *>::iterator i = pets.begin(); i != pets.end(); ++i){
 
 		Pet *pet = *i;
 		
@@ -209,7 +205,7 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 	int newPosition = movePosition(currentState.position, newDirection);
 	
 	// Does the Pet want to mate, and is it possible?
-	if ((petIntention.action & mate) && cells[newPosition].pet && newState.energy > breedEnergy) {
+	if ((petIntention.action & mate) && cells[newPosition].pet && newState.energy > PetState::breedEnergy) {
 		
 		// Mate
 		for (Direction direction = firstDirection; direction < numDirections; ++direction) {
@@ -217,12 +213,12 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 			WorldCell &cell = cells[neighbourPosition];
 			if (!cell.pet && !cell.impassable) {
 				Pet *child = new Pet(*pet, *(cells[newPosition].pet));
-				addPet(child, PetState(neighbourPosition, direction, breedEnergy / 6));
+				addPet(child, PetState(neighbourPosition, direction, PetState::breedEnergy / 6));
 				break;
 			}
 		}
 		
-		newState.energy -= breedEnergy;
+		newState.energy -= PetState::breedEnergy;
 	}
 	// Does the Pet want to move, and is it possible?
 	else if (
@@ -247,11 +243,11 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 		// Actually move.
 		newState.direction = newDirection;
 		newState.position = newPosition;
-		newState.energy -= moveEnergy;
+		newState.energy -= PetState::moveEnergy;
 	}
 	
 	// Just staying alive takes energy.
-	newState.energy -= liveEnergy;
+	newState.energy -= PetState::liveEnergy;
 	
 	// Handle death.
 	if (!newState.isAlive()) {
