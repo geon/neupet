@@ -29,6 +29,9 @@ class World{
 	std::list<Pet *> pets;
 	std::map<Pet *, PetState> petStates;
 	
+	bool addPet(Pet *newPet, PetState const &newState);
+	void removePet(Pet *pet);
+	
 	public:
 
 	int coordinateToIndex(int x, int y);
@@ -39,7 +42,6 @@ class World{
 	void generatePopulation(int numPets);
 	void sprinklePlants(int numPlants);
 	int addPetAndPlaceRandomly(Pet *newPet, PetState newState);
-	bool addPet(Pet *newPet, PetState const &newState);
 	void render();
 	void step();
 	void applyPetIntentionToPet(Pet *pet, PetIntention petIntention);

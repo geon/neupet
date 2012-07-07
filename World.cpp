@@ -170,10 +170,14 @@ void World::render(){
 
 void World::step(){
 	
-	// Update Pets.
+	// Update alive Pets.
 	for(std::list<Pet *>::iterator i=pets.begin(); i != pets.end(); ++i){
+
 		Pet *pet = *i;
-		applyPetIntentionToPet(pet, pet->getPetIntentionForSensoryInput(SensoryInput(this, pet)));
+		
+		if (petStates[pet].isAlive()) {
+			applyPetIntentionToPet(pet, pet->getPetIntentionForSensoryInput(SensoryInput(this, pet)));
+		}
 	}
 	
 	// Update WorldCells.
@@ -190,110 +194,75 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 	
 	PetState &currentState = petStates[pet];
 	PetState newState = currentState;
-
-	if (currentState.isAlive()) {
-
-		// Eat plants.
-		newState.energy += cells[currentState.position].plantEnergy;
-		cells[currentState.position].plantEnergy = 0;
+	
+	// Eat plants.
+	newState.energy += cells[currentState.position].plantEnergy;
+	cells[currentState.position].plantEnergy = 0;
+	
+	// Clamp the Pet's energy.
+	newState.energy = std::min(newState.energy, newState.maxEnergy);
+	
+	Direction oldDirection = currentState.direction;
+	Direction newDirection = offsetDirectionByRelativeDirection(oldDirection, petIntention.relativeDirection);
+	
+	// Calculate the target position.
+	int newPosition = movePosition(currentState.position, newDirection);
+	
+	// Does the Pet want to mate, and is it possible?
+	if ((petIntention.action & mate) && cells[newPosition].pet && newState.energy > breedEnergy) {
+		
+		// Mate
+		for (Direction direction = firstDirection; direction < numDirections; ++direction) {
+			int neighbourPosition = movePosition(currentState.position, direction);
+			WorldCell &cell = cells[neighbourPosition];
+			if (!cell.pet && !cell.impassable) {
+				Pet *child = new Pet(*pet, *(cells[newPosition].pet));
+				addPet(child, PetState(neighbourPosition, direction, breedEnergy / 6));
+				break;
+			}
+		}
+		
+		newState.energy -= breedEnergy;
+	}
+	// Does the Pet want to move, and is it possible?
+	else if (
+			 (petIntention.action & move)
+			 && !cells[newPosition].impassable
+			 && (!cells[newPosition].pet || !petStates[cells[newPosition].pet].isAlive())) {
+		
+		// Eat corpses.
+		if (cells[newPosition].pet) {
+			
+			// Just in case the energy is negative.
+			if (petStates[cells[newPosition].pet].energy > 0) {
+				newState.energy += petStates[cells[newPosition].pet].energy;
+			}
+			
+			removePet(cells[newPosition].pet);
+		}
 		
 		// Clamp the Pet's energy.
 		newState.energy = std::min(newState.energy, newState.maxEnergy);
 		
-		Direction oldDirection = currentState.direction;
-		Direction newDirection = offsetDirectionByRelativeDirection(oldDirection, petIntention.relativeDirection);
-		
-		// Calculate the target position.
-		int newPosition = movePosition(currentState.position, newDirection);
-		
-		// Does the Pet want to mate, and is it possible?
-		if ((petIntention.action & mate) && cells[newPosition].pet && newState.energy > breedEnergy) {
-			
-			// Mate
-			for (Direction direction = firstDirection; direction < numDirections; ++direction) {
-				int neighbourPosition = movePosition(currentState.position, direction);
-				WorldCell &cell = cells[neighbourPosition];
-				if (!cell.pet && !cell.impassable) {
-					Pet *child = new Pet(*pet, *(cells[newPosition].pet));
-					addPet(child, PetState(neighbourPosition, direction, breedEnergy / 6));
-					break;
-				}
-			}
-			
-			newState.energy -= breedEnergy;
-		}
-		// Does the Pet want to move, and is it possible?
-		else if ((petIntention.action & move) && ((!cells[newPosition].pet || !petStates[cells[newPosition].pet].isAlive()) && !cells[newPosition].impassable)) {
-			
-			// Eat corpses.
-			if (cells[newPosition].pet) {
-
-				// Just in case the energy is negative.
-				if (petStates[cells[newPosition].pet].energy > 0) {
-					newState.energy += petStates[cells[newPosition].pet].energy;
-				}
-				
-				pets.remove(cells[newPosition].pet);
-				petStates.erase(cells[newPosition].pet);
-			}
-			
-			// Clamp the Pet's energy.
-			newState.energy = std::min(newState.energy, newState.maxEnergy);
-
-			// Actually move.
-			newState.direction = newDirection;
-			newState.position = newPosition;
-			newState.energy -= moveEnergy;
-		}
-
-		// Just staying alive takes energy.
-		newState.energy -= liveEnergy;
-		
-		// Handle death.
-		if (!newState.isAlive()) {
-			
-			// Replace the dead Pet with a copy of one random living Pet, to top up the population.
-			
-			Pet *original = 0;
-			
-			std::list<Pet*>::iterator candidate = pets.begin();
-
-			// Begin at a random position.
-			std::advance(candidate, rand() % pets.size());
-			
-			// Walk over the list until a living Pet is found, max one lap. 
-			for (int i = 0; i < pets.size(); ++i) {
-				
-				// Make sure the Pet to copy is alive.
-				if (petStates[*candidate].isAlive()) {
-					
-					original = *candidate;
-					break;
-					
-				} else {
-					
-					// The Pet is dead, so skip to the next.
-					++candidate;
-					
-					// Loop at the end of the list.
-					if (candidate == pets.end()) {
-						candidate = pets.begin();
-					}
-				}
-			}
-			
-			// Copy the original.
-			if (original) {
-				Pet *copy = new Pet(*original);
-				addPetAndPlaceRandomly(copy, petStates[original]);
-			}
-		}
-
-		// Update the stored PetState and WorldCell pointer.
-		cells[currentState.position].pet = 0;
-		cells[newState.position].pet = pet;
-		petStates[pet] = newState;
+		// Actually move.
+		newState.direction = newDirection;
+		newState.position = newPosition;
+		newState.energy -= moveEnergy;
 	}
+	
+	// Just staying alive takes energy.
+	newState.energy -= liveEnergy;
+	
+	// Handle death.
+	if (!newState.isAlive()) {
+
+		// Possibly archive the pet for statistics.
+	}
+	
+	// Update the stored PetState and WorldCell pointer.
+	cells[currentState.position].pet = 0;
+	cells[newState.position].pet = pet;
+	petStates[pet] = newState;
 }
 
 
@@ -331,4 +300,13 @@ bool World::addPet(Pet *newPet, PetState const &newState) {
 	petStates[newPet] = newState;
 	
 	return true;
+}
+
+
+void World::removePet(Pet *pet) {
+	
+	pets.remove(pet);
+	petStates.erase(pet);
+	
+	delete pet;
 }

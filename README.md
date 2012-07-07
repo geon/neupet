@@ -21,6 +21,8 @@ TODO
 
 ### World/Pet Interaction
 
+* Set a max life length to pets, so they can't stay alive forever.
+* Make the world generate a new population from the last n surviving pets.
 * Interface for the Pet position and direction, energy levels etc. in World.
 * Split the plant logic to separate class with generic base class. (?) Not fun.
 
@@ -29,7 +31,6 @@ TODO
 * Health, Strength, Metabolism, Mass etc. interacting with each other. Dead Pets should still contain some energy to be useful as food.
 * Battles & Mating - Add a flag for each so the Pet can signal if it is violent or "in heat". Violent Pets will battle anything it moves into. Pets in heat will mate if running into another Pet in heat.
 * Bundle the Pet and PetState into a common stuct for storage in World. Makes the std::map from Pet to PetState unnecesary.
-* Separate the list of Pets into dead and living. Dont calculate PetIntention for dead Pets.
 * Decompose dead pets slowly.
 * Decomposing Pets should seep into the ground, adding nutricients (pland growth rate) for plants.
 * Plants should deplete the nutricients of the ground.
@@ -44,6 +45,7 @@ TODO
 
 ### Misc.
 
+* Non-neural Pet class until I get the world and evolution working.
 * Graphics.
 * Pretty graphics. http://www.youtube.com/watch?v=-PsQqpK0MvM&list=UUutMBmI_ydvgmzbkQxbI4IQ&index=9&feature=plcp
 * GUI. Picking and examining Pets, etc.
