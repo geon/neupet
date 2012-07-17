@@ -4,44 +4,53 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include <SFML/Graphics.hpp>
 
 int main()
 {
 	
-	srand(time(NULL));
-
-	std::cout << "How many pets? ";
-	int numPets;
-	std::cin >> numPets;
-
-	World world;
-//	world.generatePopulation(numPets);
-	world.sprinklePlants(100);
-	world.render();
 
 	
-	while(char command = std::cin.get() != 'q'){
-
-		int stepsPerFrame = 1;
-		if (command == 'c') {
-			stepsPerFrame = 100;
-		}
-		if (command == 'm') {
-			stepsPerFrame = 1000;
-		}
-		if (command == 'v') {
-			stepsPerFrame = 10000;
-		}
-		if (command == 'b') {
-			stepsPerFrame = 100000;
-		}
+	srand(time(NULL));
+	
+	World world;
+	
+	//	std::cout << "How many pets? ";
+	//	int numPets;
+	//	std::cin >> numPets;
+	//	world.generatePopulation(numPets);
+	
+	world.sprinklePlants(100);
+	
+	
+	
+	
+	// Create main window
+    sf::RenderWindow App(sf::VideoMode(640, 480), "neupet");
+	
+    // Start game loop
+    while (App.IsOpened())
+    {
+        // Process events
+        sf::Event Event;
+        while (App.GetEvent(Event))
+        {
+            // Close window : exit
+            if (Event.Type == sf::Event::Closed)
+                App.Close();
+        }
 		
-		for (int i = 0; i < stepsPerFrame; ++i) {
-			world.step();
-		}
+        // Clear screen
+        App.Clear();
+		
 
-		world.render();
-	}
-
-	return 0;
+		world.step();
+		world.render(App);
+		
+		
+        // Finally, display the rendered frame on screen
+        App.Display();
+    }
+	
+    return EXIT_SUCCESS;
 }

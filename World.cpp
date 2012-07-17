@@ -6,9 +6,17 @@
 #include <list>
 
 
+// Must be defined in the header if they are used there.
+//const int World::width = 30;
+//const int World::height = 20;
+//const int World::initialPopulationSize = 30;
+
+
 World::World(){
 	
 	buildCage(6);
+	
+	image.Create(width*2+1, height*2);
 }
 
 
@@ -153,7 +161,7 @@ void World::sprinklePlants(int numPlants){
 }
 
 
-void World::render(){
+void World::render(sf::RenderWindow &window){
 	
 	for(int y=0; y < height; ++y){
 		
@@ -161,22 +169,40 @@ void World::render(){
 		std::cout << std::endl;
 		
 		// Indent odd lines to line up hexagonally.
-		if(y % 2)
-			std::cout << ' ';
+		int indentation = y % 2 ? 1: 0;
 		
 		for(int x=0; x < width; ++x){
 			
 			// Get the relevant cell.
 			WorldCell &cell = cells[coordinateToIndex(x, y)];
 			
-			// Mark any occupied cell.
-			std::cout << (cell.pet ? (petStates[cell.pet].isAlive() ? '*' : 'o') : (cell.impassable ? 'X' : (cell.plantEnergy > 0 ? (cell.plantEnergy > 0.5 ? 'A' : '^') : ' ')));
+			// Find a suitable color.
+			sf::Color color = sf::Color::Black;
+			if (cell.pet) {
+				if (petStates[cell.pet].isAlive()) {
+					color = sf::Color::Red;
+				} else {
+					color = sf::Color(128, 0, 0);
+				}
+			} else {
+				if (cell.impassable) {
+					color = sf::Color::White;
+				} else {
+					if (cell.plantEnergy > 0) {
+						color = sf::Color(0, 255 * cell.plantEnergy, 0);
+					}
+				}
+			}
 			
-			// Spacing for hexagonal layout.
-			std::cout << ' ';
+			// Plot the cell.
+			image.SetPixel(indentation + x*2 + 1, y*2    , color);			
+			image.SetPixel(indentation + x*2    , y*2    , color);			
+			image.SetPixel(indentation + x*2 + 1, y*2 + 1, color);			
+			image.SetPixel(indentation + x*2    , y*2 + 1, color);			
 		}
 	}
 	
+	window.Draw(sf::Sprite(image));
 }
 
 

@@ -21,6 +21,7 @@ TODO
 
 ### World/Pet Interaction
 
+* Regenrerate the entire world after extinction.
 * Interface for the Pet position and direction, energy levels etc. in World.
 * Split the plant logic to separate class with generic base class. (?) Not fun.
 
@@ -44,10 +45,9 @@ TODO
 ### Misc.
 
 * Non-neural Pet class until I get the world and evolution working.
-* Graphics.
-* Pretty graphics. http://www.youtube.com/watch?v=-PsQqpK0MvM&list=UUutMBmI_ydvgmzbkQxbI4IQ&index=9&feature=plcp
 * GUI. Picking and examining Pets, etc.
 * Ancestry tracking. Useful for statistics.
+* Pretty graphics. http://www.youtube.com/watch?v=-PsQqpK0MvM&list=UUutMBmI_ydvgmzbkQxbI4IQ&index=9&feature=plcp
 
 
 ### Life "Rules"
