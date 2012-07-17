@@ -20,7 +20,7 @@ int main()
 	//	std::cin >> numPets;
 	//	world.generatePopulation(numPets);
 	
-	world.sprinklePlants(100);
+	world.sprinklePlants(3000);
 	
 	
 	

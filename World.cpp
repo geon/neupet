@@ -14,7 +14,8 @@
 
 World::World(){
 	
-	buildCage(6);
+	buildCage(30);
+	buildWalls();
 	
 	image.Create(width*2+1, height*2);
 }
@@ -119,6 +120,20 @@ void World::buildCage(int sideLength){
 		
 		// Turn.
 		direction = offsetDirectionByRelativeDirection(direction, forwardLeft);
+	}
+}
+
+void World::buildWalls(){
+	// Place walls along the sides of the world.
+	
+	// Place wall.
+	for(int x=0; x<width; ++x){
+		cells[x].impassable = true;
+		cells[x + width*(height-1)].impassable = true;
+	}
+	for(int y=0; y<height; ++y){
+		cells[y*width].impassable = true;
+		cells[y*width + (width-1)].impassable = true;
 	}
 }
 
