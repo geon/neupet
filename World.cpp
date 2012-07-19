@@ -148,6 +148,12 @@ void World::regeneratePopulation(){
 		removePet(pets.back());
 	}	
 	
+	// Use archived pets for only half of ththe population, to weed out the bad ones.
+	int maxNumPetsToReuse = initialPopulationSize / 2;
+	if (petArchive.size() > maxNumPetsToReuse) {
+		petArchive.resize(maxNumPetsToReuse);
+	}
+	
 	// Generate Pets to fill up the initialPopulationSize.
 	for(int i=0; i<initialPopulationSize && i<width*height; ++i){
 
