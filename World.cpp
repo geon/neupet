@@ -176,6 +176,11 @@ void World::regeneratePopulation(){
 			break;
 		}
 	}
+	
+	// Try not to introduce bias by the order in which Pets are processed.
+	std::vector<Pet *> v(pets.begin(), pets.end());
+	random_shuffle(v.begin(), v.end());
+	pets = std::list<Pet *>(v.begin(), v.end());	
 }
 
 
