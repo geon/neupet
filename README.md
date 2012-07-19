@@ -6,7 +6,7 @@ Evolving neural networks-controlled virtual pets -- a petri dish in your compute
 Why?
 ----
 
-I'm very faschinated by evolutionary algritms, virtual life and artificial intelligence. This project combines them, and since I had the iea, it has been irresistable to me.
+I'm very faschinated by evolutionary algritms, virtual life and artificial intelligence. This project combines them, and after I had the iea, it has been irresistable to me.
 
 NeuPet is heavily inspired by a MS-DOS game called [Evolve! Lite](http://www.youtube.com/watch?v=kPQBexmrvEQ) I found on a shareware CD in the nineties, called Game Empire. It used pseudo celluar automata to manage a population of "creatures" moving around on a grid, acording to a configurable set of rules. The creatures would respond to the prescense of friends or foes (hardcoded as two spicies) and go forward, left, right, etc.
 
@@ -15,15 +15,16 @@ How?
 
 A set of "pets" live in a hexagonal grid world. Each pet is controlled by a neural network, and has to find food and avoid getting eaten in order to survive and reproduce.
 
+This is not just an evolutionary algorithm, since there is no concept of "generations" or any sort of fitness evaluation. pets are just let loose in the world and the ones who survive the longes, and have the most offspring get to pass on their genes. Just like in real life.
 
 TODO
 ----
 
 ### World/Pet Interaction
 
-* Regenrerate the entire world after extinction.
 * Interface for the Pet position and direction, energy levels etc. in World.
 * Split the plant logic to separate class with generic base class. (?) Not fun.
+* Regenrerate the entire world after extinction. (random walls etc?)
 
 ### World/Pet Sophistication
 
@@ -44,6 +45,7 @@ TODO
 
 ### Misc.
 
+* Save & load pet population. JSON?
 * Non-neural Pet class until I get the world and evolution working.
 * GUI. Picking and examining Pets, etc.
 * Ancestry tracking. Useful for statistics.
