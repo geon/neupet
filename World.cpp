@@ -185,7 +185,7 @@ void World::sprinklePlants(int numPlants){
 		WorldCell &cell = cells[position];
 		
 		cell.plantGrowth = 0.005;
-		cell.plantEnergy = cell.plantMaxEnergy * rand() / (float) RAND_MAX;
+		cell.plantEnergy = cell.plantMaxEnergy;
 	}
 }
 
@@ -193,9 +193,6 @@ void World::sprinklePlants(int numPlants){
 void World::render(sf::RenderWindow &window){
 	
 	for(int y=0; y < height; ++y){
-		
-		// Begin a new line.
-		std::cout << std::endl;
 		
 		// Indent odd lines to line up hexagonally.
 		int indentation = y % 2 ? 1: 0;
@@ -288,7 +285,6 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 			if (!cell.pet && !cell.impassable) {
 				Pet *child = new Pet(*pet, *(cells[newPosition].pet));
 				addPet(child, PetState(neighbourPosition, direction, PetState::breedEnergy / 6));
-				break;
 			}
 		}
 		
