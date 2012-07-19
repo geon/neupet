@@ -15,8 +15,11 @@
 World::World(){
 	
 	buildCage(30);
+	buildCage(50);
 	buildWalls();
-	
+
+	sprinklePlants(3000);
+
 	image.Create(width*2+1, height*2);
 }
 
@@ -140,14 +143,19 @@ void World::buildWalls(){
 
 void World::regeneratePopulation(){
 
-	// Generate Pets t ofill up the initialPopulationSize.
+	// Remove any remaining Pet.
+	while(pets.size()){
+		removePet(pets.back());
+	}	
+	
+	// Generate Pets to fill up the initialPopulationSize.
 	for(int i=0; i<initialPopulationSize && i<width*height; ++i){
 
 		Pet *pet = 0;
 		
-		// Reuse the recently dead pets.
+		// Reuse the recently died Pets.
 		if (!petArchive.empty()) {
-			petArchive.back();
+			pet = petArchive.back();
 			petArchive.pop_back();
 		}
 		
@@ -194,11 +202,7 @@ void World::render(sf::RenderWindow &window){
 			// Find a suitable color.
 			sf::Color color = sf::Color::Black;
 			if (cell.pet) {
-				if (petStates[cell.pet].isAlive()) {
-					color = sf::Color::Red;
-				} else {
-					color = sf::Color(128, 0, 0);
-				}
+				color = sf::Color::Red;
 			} else {
 				if (cell.impassable) {
 					color = sf::Color::White;
@@ -223,21 +227,20 @@ void World::render(sf::RenderWindow &window){
 
 void World::step(){
 	
-	int numAlivePets = 0;
-	
-	// Update alive Pets.
-	for(std::list<Pet *>::iterator i = pets.begin(); i != pets.end(); ++i){
-
-		Pet *pet = *i;
+	// Update Pets.
+	std::list<Pet *>::iterator i = pets.begin();
+	while (i != pets.end()) {
 		
-		if (petStates[pet].isAlive()) {
+		Pet *pet = *i;
 
-			applyPetIntentionToPet(pet, pet->getPetIntentionForSensoryInput(SensoryInput(this, pet)));
-			++numAlivePets;
-		}
+		// Advance i before applayPetIntention, so the loop won't crash when a Pet is erased.
+		i++;
+		
+		applyPetIntentionToPet(pet, pet->getPetIntentionForSensoryInput(SensoryInput(this, pet)));
 	}
 
-	if (numAlivePets < 2) {
+	// Create a new world when this batch goes extinct.
+	if (pets.size() < 2) {
 		regeneratePopulation();
 	}
 	
@@ -286,28 +289,18 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 		newState.energy -= PetState::breedEnergy;
 	}
 	// Does the Pet want to move, and is it possible?
-	else if (
-			 (petIntention.action & move)
+	else if ((petIntention.action & move)
 			 && !cells[newPosition].impassable
-			 && (!cells[newPosition].pet || !petStates[cells[newPosition].pet].isAlive())) {
-		
-		// Eat corpses.
-		if (cells[newPosition].pet) {
-			
-			// Just in case the energy is negative.
-			if (petStates[cells[newPosition].pet].energy > 0) {
-				newState.energy += petStates[cells[newPosition].pet].energy;
-			}
-			
-			removePet(cells[newPosition].pet);
-		}
-		
-		// Clamp the Pet's energy.
-		newState.energy = std::min(newState.energy, PetState::maxEnergy);
+			 && !cells[newPosition].pet) {
+				
 		
 		// Actually move.
 		newState.direction = newDirection;
 		newState.position = newPosition;
+		cells[currentState.position].pet = 0;
+		cells[newState.position].pet = pet;
+
+		// Moving consumes some energy.
 		newState.energy -= PetState::moveEnergy;
 	}
 	
@@ -317,16 +310,14 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 	// Age the pet.
 	++newState.age;
 	
+	petStates[pet] = newState;
+	
 	// Handle death.
 	if (!newState.isAlive()) {
-
-		// Possibly archive the pet for statistics.
+		
+		// For now, dying Pets just disappear.
+		removePet(pet);
 	}
-	
-	// Update the stored PetState and WorldCell pointer.
-	cells[currentState.position].pet = 0;
-	cells[newState.position].pet = pet;
-	petStates[pet] = newState;
 }
 
 
@@ -354,8 +345,13 @@ int World::addPetAndPlaceRandomly(Pet *newPet, PetState newState) {
 
 bool World::addPet(Pet *newPet, PetState const &newState) {
 	
-	// Refuse to add Pets at any position already occupied by a living Pet.
-	if (cells[newState.position].pet && petStates[cells[newState.position].pet].isAlive()) {
+	// Refuse to add Pets at any position already occupied by a Pet.
+	if (cells[newState.position].pet) {
+		return false;
+	}
+	
+	// Refuse to add Pets at walls.
+	if (cells[newState.position].impassable) {
 		return false;
 	}
 	
@@ -369,6 +365,7 @@ bool World::addPet(Pet *newPet, PetState const &newState) {
 
 void World::removePet(Pet *pet) {
 	
+	cells[petStates[pet].position].pet = 0;
 	pets.remove(pet);
 	petStates.erase(pet);
 	

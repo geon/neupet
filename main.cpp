@@ -15,18 +15,13 @@ int main()
 	
 	World world;
 	
-	//	std::cout << "How many pets? ";
-	//	int numPets;
-	//	std::cin >> numPets;
-	//	world.generatePopulation(numPets);
-	
-	world.sprinklePlants(3000);
-	
+
 	
 	
 	
 	// Create main window
     sf::RenderWindow App(sf::VideoMode(640, 480), "neupet");
+	App.Clear();
 	
     // Start game loop
     while (App.IsOpened())
@@ -40,17 +35,13 @@ int main()
                 App.Close();
         }
 		
-        // Clear screen
-        App.Clear();
-		
-
+		// Run the simulation.
 		world.step();
+
+		// Show the world.
 		world.render(App);
-		
-		
-        // Finally, display the rendered frame on screen
-        App.Display();
-    }
+		App.Display();
+	}
 	
     return EXIT_SUCCESS;
 }
