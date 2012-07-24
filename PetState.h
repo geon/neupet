@@ -7,6 +7,7 @@ struct PetState{
 	
 	static const float liveEnergy;
 	static const float moveEnergy;
+	static const float battleEnergy;
 	static const float breedEnergy;
 	static const float maxEnergy;
 	static const int maxAge;

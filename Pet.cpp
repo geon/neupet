@@ -216,7 +216,7 @@ void Pet::processInput(float inputNeurons[], float outputNeurons[]) {
 	for (int write = 0; write < layerSize; ++write) {
 		processingNeuronsWrite[write] = 0;
 		for (int read = 0; read < numInputNeurons; ++read) {
-			processingNeuronsWrite[write] = inputNeurons[read] * inputConnections[write][read];
+			processingNeuronsWrite[write] += inputNeurons[read] * inputConnections[write][read];
 		}
 	}
 	
@@ -246,7 +246,7 @@ void Pet::processInput(float inputNeurons[], float outputNeurons[]) {
 	for (int write = 0; write < numOutputNeurons; ++write) {
 		outputNeurons[write] = 0;
 		for (int read = 0; read < layerSize; ++read) {
-			outputNeurons[write] = processingNeuronsRead[read] * outputConnections[write][read];
+			outputNeurons[write] += processingNeuronsRead[read] * outputConnections[write][read];
 		}
 	}
 }

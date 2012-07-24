@@ -14,10 +14,10 @@
 
 World::World(){
 	
-	buildCage(20);
-	buildCage(40);
-	buildCage(60);
-	buildCage(80);
+	buildCage(20, upLeft);
+	buildCage(40, upRight);
+	buildCage(60, right);
+	buildCage(80, downRight);
 	buildWalls();
 
 	sprinklePlants(3000);
@@ -98,7 +98,7 @@ Direction World::offsetDirectionByRelativeDirection(Direction direction, Relativ
 }
 
 
-void World::buildCage(int sideLength){
+void World::buildCage(int sideLength, Direction openingDirection){
 	// Draw a "cage" of walls with one side open.
 	
 	// Begin in the center.
@@ -106,12 +106,12 @@ void World::buildCage(int sideLength){
 	
 	// Move to starting position
 	for(int i=0; i<sideLength; ++i){
-		position = movePosition(position, upLeft);
+		position = movePosition(position, openingDirection);
 	}
 	cells[position].impassable = true;
 	
 	// Draw a semi circle. (5 sides of 6.)
-	Direction direction = downLeft;
+	Direction direction = offsetDirectionByRelativeDirection(openingDirection, backwardLeft);
 	for(int j=0; j<5; ++j){
 		
 		// Draw one side.
@@ -295,23 +295,51 @@ void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
 		}
 		
 		newState.energy -= PetState::breedEnergy;
-	}
-	// Does the Pet want to move, and is it possible?
-	else if ((petIntention.action & move)
-			 && !cells[newPosition].impassable
-			 && !cells[newPosition].pet) {
-				
-		
-		// Actually move.
-		newState.direction = newDirection;
-		newState.position = newPosition;
-		cells[currentState.position].pet = 0;
-		cells[newState.position].pet = pet;
 
-		// Moving consumes some energy.
-		newState.energy -= PetState::moveEnergy;
+	} else {
+
+		// Does the Pet want to battle, and is it possible?
+		if ((petIntention.action & battle)
+			&& cells[newPosition].pet) {
+			
+			PetState &opponentState = petStates[cells[newPosition].pet];
+			
+			// If the Pet is stronger than the opponent, eat it.
+			if (currentState.energy > opponentState.energy) {
+				newState.energy -= PetState::battleEnergy;
+
+				if (newState.isAlive()) {
+					newState.energy	+= opponentState.energy;
+					opponentState.energy = 0;
+					//				removePet(cells[newPosition].pet);
+					newState.energy = std::min(newState.energy, PetState::maxEnergy);
+				}				
+			}
+			// Actually move.
+			newState.direction = newDirection;
+			newState.position = newPosition;
+			cells[currentState.position].pet = 0;
+			cells[newState.position].pet = pet;
+			
+			// Moving consumes some energy.
+		}
+
+		// Does the Pet want to move, and is it possible?
+		if ((petIntention.action & move)
+			&& !cells[newPosition].impassable
+			&& !cells[newPosition].pet) {
+			
+			// Actually move.
+			newState.direction = newDirection;
+			newState.position = newPosition;
+			cells[currentState.position].pet = 0;
+			cells[newState.position].pet = pet;
+			
+			// Moving consumes some energy.
+			newState.energy -= PetState::moveEnergy;
+		}
 	}
-	
+		
 	// Just staying alive takes energy.
 	newState.energy -= PetState::liveEnergy;
 	

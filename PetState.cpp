@@ -3,6 +3,7 @@
 
 const float PetState::liveEnergy = 1.0/1000;
 const float PetState::moveEnergy = 1.0/300;
+const float PetState::battleEnergy = 1.0/100;
 const float PetState::breedEnergy = 0.5;
 const float PetState::maxEnergy = 1;
 const int PetState::maxAge = 1000;

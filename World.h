@@ -45,7 +45,7 @@ class World{
 	int movePosition(int position, Direction direction);
 	Direction offsetDirectionByRelativeDirection(Direction direction, RelativeDirection relativeDirection);
 
-	void buildCage(int sideLength);
+	void buildCage(int sideLength, Direction openingDirection);
 	void buildWalls();
 	void sprinklePlants(int numPlants);
 	int addPetAndPlaceRandomly(Pet *newPet, PetState newState);
