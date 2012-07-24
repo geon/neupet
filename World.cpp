@@ -14,11 +14,14 @@
 
 World::World(){
 	
-	buildCage(30);
-	buildCage(50);
+	buildCage(20);
+	buildCage(40);
+	buildCage(60);
+	buildCage(80);
 	buildWalls();
 
 	sprinklePlants(3000);
+	regeneratePopulation();
 
 	image.Create(width*2+1, height*2);
 }
@@ -233,7 +236,7 @@ void World::render(sf::RenderWindow &window){
 }
 
 
-void World::step(){
+bool World::step(){
 	
 	// Update Pets.
 	std::list<Pet *>::iterator i = pets.begin();
@@ -246,11 +249,6 @@ void World::step(){
 		
 		applyPetIntentionToPet(pet, pet->getPetIntentionForSensoryInput(SensoryInput(this, pet)));
 	}
-
-	// Create a new world when this batch goes extinct.
-	if (pets.size() < 2) {
-		regeneratePopulation();
-	}
 	
 	// Update WorldCells.
 	for (int i=0; i<width*height; ++i) {
@@ -259,6 +257,9 @@ void World::step(){
 		// Plant growth.
 		cell.plantEnergy = std::min(cell.plantEnergy + cell.plantGrowth, cell.plantMaxEnergy);
 	}
+
+	// Is is the world still populated?
+	return pets.size() > 1;
 }
 
 

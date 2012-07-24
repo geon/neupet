@@ -50,7 +50,7 @@ class World{
 	void sprinklePlants(int numPlants);
 	int addPetAndPlaceRandomly(Pet *newPet, PetState newState);
 	void render(sf::RenderWindow &window);
-	void step();
+	bool step();
 	void applyPetIntentionToPet(Pet *pet, PetIntention petIntention);
 };
 

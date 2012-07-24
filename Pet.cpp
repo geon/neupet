@@ -16,7 +16,7 @@
 const int Pet::numLayers = 1;
 const int Pet::layerSize = 6;
 const int Pet::numInputNeurons = numRelativeDirections+1;
-const int Pet::numOutputNeurons = numRelativeDirections;
+const int Pet::numOutputNeurons = numRelativeDirections+3;
 
 
 Pet::Pet() {
@@ -31,10 +31,10 @@ Pet::Pet() {
 		}
 	}
 	
-	outputConnections.resize(layerSize);
-	for (int i = 0; i < layerSize; ++i) {
-		outputConnections[i].resize(numOutputNeurons);
-		for (int j = 0; j < numOutputNeurons; ++j) {
+	outputConnections.resize(numOutputNeurons);
+	for (int i = 0; i < numOutputNeurons; ++i) {
+		outputConnections[i].resize(layerSize);
+		for (int j = 0; j < layerSize; ++j) {
 			outputConnections[i][j] = (rand() / (float) RAND_MAX) * 2 - 1;
 		}
 	}
@@ -65,10 +65,10 @@ Pet::Pet(Pet &a, Pet &b) {
 		}
 	}
 	
-	outputConnections.resize(layerSize);
-	for (int i = 0; i < layerSize; ++i) {
-		outputConnections[i].resize(numOutputNeurons);
-		for (int j = 0; j < numOutputNeurons; ++j) {
+	outputConnections.resize(numOutputNeurons);
+	for (int i = 0; i < numOutputNeurons; ++i) {
+		outputConnections[i].resize(layerSize);
+		for (int j = 0; j < layerSize; ++j) {
 			float factor = rand() / (float) RAND_MAX;
 			outputConnections[i][j] = a.outputConnections[i][j] * factor + b.outputConnections[i][j] * (1-factor);
 		}
@@ -91,9 +91,7 @@ Pet::Pet(Pet &a, Pet &b) {
 	
 	const float mutationRate = 0.01;
 
-	inputConnections.resize(layerSize);
 	for (int i = 0; i < layerSize; ++i) {
-		inputConnections[i].resize(numInputNeurons);
 		for (int j = 0; j < numInputNeurons; ++j) {
 			if (rand() / (float) RAND_MAX < mutationRate) {
 				inputConnections[i][j] = (rand() / (float) RAND_MAX) * 2 - 1;
@@ -101,21 +99,16 @@ Pet::Pet(Pet &a, Pet &b) {
 		}
 	}
 	
-	outputConnections.resize(layerSize);
-	for (int i = 0; i < layerSize; ++i) {
-		outputConnections[i].resize(numOutputNeurons);
-		for (int j = 0; j < numOutputNeurons; ++j) {
+	for (int i = 0; i < numOutputNeurons; ++i) {
+		for (int j = 0; j < layerSize; ++j) {
 			if (rand() / (float) RAND_MAX < mutationRate) {
 				outputConnections[i][j] = (rand() / (float) RAND_MAX) * 2 - 1;
 			}
 		}
 	}
 	
-	processingConnections.resize(numLayers);
 	for (int k = 0; k < numLayers; ++k) {
-		processingConnections[k].resize(layerSize);
 		for (int i = 0; i < layerSize; ++i) {
-			processingConnections[k][i].resize(layerSize);
 			for (int j = 0; j < layerSize; ++j) {
 				if (rand() / (float) RAND_MAX < mutationRate) {
 					processingConnections[k][i][j] = (rand() / (float) RAND_MAX) * 2 - 1;
@@ -158,7 +151,7 @@ PetIntention Pet::getPetIntentionForSensoryInput(SensoryInput sensory){
 	differenceAndSumFromAbsolutes(inputNeurons[forward],      inputNeurons[backward]);
 
 	// Think it over.
-	float outputNeurons[numRelativeDirections];
+	float outputNeurons[numOutputNeurons];
 	processInput(inputNeurons, outputNeurons);
 
 	// Translate from mirror-insensitive output to direct values.
@@ -168,7 +161,7 @@ PetIntention Pet::getPetIntentionForSensoryInput(SensoryInput sensory){
 	absolutesFromdifferenceAndSum(outputNeurons[backwardLeft], outputNeurons[backwardRight]);
 	absolutesFromdifferenceAndSum(outputNeurons[forwardLeft],  outputNeurons[forwardRight]);
 
-	// Translate neuron output to PetIntention. (Find the neuron with the largest output. Each neuron represents a direction.)
+	// Translate neuron output to RelativeDirection. (Find the neuron with the largest output. Each neuron represents a direction.)
 	float maxOutput = -FLT_MAX;
 	RelativeDirection intendedRelativeDirection = forward;
 	for (RelativeDirection relativeDirection = firstRelativeDirection; relativeDirection < numRelativeDirections; ++relativeDirection) {
@@ -179,7 +172,16 @@ PetIntention Pet::getPetIntentionForSensoryInput(SensoryInput sensory){
 		}
 	}
 	
-	return PetIntention(static_cast<Action>(mate | battle | move), intendedRelativeDirection);
+	
+//	intendedRelativeDirection = (RelativeDirection) (rand() % numRelativeDirections);
+	
+
+	// Decide the action based on the 3 neurons after the drections.
+	Action intendedAction = static_cast<Action>((0 < outputNeurons[numRelativeDirections] + 0 ? move   : 0)|
+												(0 < outputNeurons[numRelativeDirections] + 1 ? battle : 0)|
+												(0 < outputNeurons[numRelativeDirections] + 2 ? mate   : 0));
+	
+	return PetIntention(intendedAction, intendedRelativeDirection);
 }
 
 
@@ -218,27 +220,29 @@ void Pet::processInput(float inputNeurons[], float outputNeurons[]) {
 		}
 	}
 	
+	// Reuse the two layers of neurons. Much like double-buffered graphics.
+	std::swap(
+			  processingNeuronsRead,
+			  processingNeuronsWrite
+			  );
+
 	// Propagate through the rest of the processing layers.
 	for (int layer=1; layer<numLayers; ++layer) {
-
-		// Reuse the two layers of neurons. Much like double-buffered graphics.
-		std::swap(
-				  processingNeuronsRead,
-				  processingNeuronsWrite
-				  );
 	
 		for (int write = 0; write < layerSize; ++write) {
 			processingNeuronsWrite[write] = 0;
 			for(int read = 0; read < layerSize; ++read)
 				processingNeuronsWrite[write] += processingNeuronsRead[read] * processingConnections[layer][write][read];
 		}
+
+		// Reuse the two layers of neurons. Much like double-buffered graphics.
+		std::swap(
+				  processingNeuronsRead,
+				  processingNeuronsWrite
+				  );
 	}
-	
-	// Output neurons read from the last layer.
-	std::swap(
-			  processingNeuronsRead,
-			  processingNeuronsWrite
-			  );
+		
+	// Compute the output.
 	for (int write = 0; write < numOutputNeurons; ++write) {
 		outputNeurons[write] = 0;
 		for (int read = 0; read < layerSize; ++read) {
