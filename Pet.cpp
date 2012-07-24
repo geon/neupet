@@ -49,6 +49,12 @@ Pet::Pet() {
 			}
 		}
 	}
+	
+	
+	// Set a random color.
+	color = sf::Color(rand() / (float) RAND_MAX * 255,
+					  rand() / (float) RAND_MAX * 255,
+					  rand() / (float) RAND_MAX * 255);
 }
 
 
@@ -86,6 +92,12 @@ Pet::Pet(Pet &a, Pet &b) {
 		}
 	}
 	
+	float factor = rand() / (float) RAND_MAX;
+	color = sf::Color(a.color.r * factor + b.color.r * (factor - 1),
+					  a.color.g * factor + b.color.g * (factor - 1),
+					  a.color.b * factor + b.color.b * (factor - 1));
+
+	
 	
 	// Add mutations.
 	
@@ -115,6 +127,12 @@ Pet::Pet(Pet &a, Pet &b) {
 				}
 			}
 		}
+	}
+
+	if (rand() / (float) RAND_MAX < mutationRate/100) {
+		color = sf::Color(rand() / (float) RAND_MAX * 255,
+						  rand() / (float) RAND_MAX * 255,
+						  rand() / (float) RAND_MAX * 255);
 	}
 }
 

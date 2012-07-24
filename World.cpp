@@ -213,7 +213,7 @@ void World::render(sf::RenderWindow &window){
 			// Find a suitable color.
 			sf::Color color = sf::Color::Black;
 			if (cell.pet) {
-				color = sf::Color::Red;
+				color = cell.pet->color;
 			} else {
 				if (cell.impassable) {
 					color = sf::Color::White;

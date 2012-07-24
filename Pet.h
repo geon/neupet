@@ -6,6 +6,8 @@ class SensoryInput;
 
 #include <vector>
 
+#include <SFML/Graphics.hpp>
+
 
 class Pet{
 
@@ -17,7 +19,10 @@ public:
 
 	void collectInput(SensoryInput sensory);
 	
+
+	sf::Color color;
 	
+
 //protected:
 
 	static void differenceAndSumFromAbsolutes(float &a, float &b);
