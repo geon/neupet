@@ -15,9 +15,11 @@
 World::World(){
 	
 	buildCage(20, upLeft);
-	buildCage(40, upRight);
-	buildCage(60, right);
-	buildCage(80, downRight);
+	buildCage(35, downRight);
+	buildCage(50, upLeft);
+	buildCage(65, downRight);
+	buildCage(80, upLeft);
+	buildCage(95, downRight);
 	buildWalls();
 
 	sprinklePlants(3000);
@@ -406,6 +408,13 @@ void World::removePet(Pet *pet) {
 	petStates.erase(pet);
 	
 	petArchive.push_back(pet);
+	
+	// Keep the archive from growing larger than needed.
+	while (petArchive.size() > initialPopulationSize / 2) {
+		Pet *pet = petArchive.front();
+		petArchive.pop_front();
+		delete pet;
+	}
 }
 
 
