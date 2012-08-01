@@ -14,11 +14,8 @@
 World::World(){
 	
 	buildCage(20, upLeft);
-	buildCage(35, downRight);
 	buildCage(50, upLeft);
-	buildCage(65, downRight);
 	buildCage(80, upLeft);
-	buildCage(95, downRight);
 	buildWalls();
 
 	sprinklePlants();
@@ -217,7 +214,7 @@ void World::sprinklePlants() {
 		
 		
 		if (0 < sinf(x / 13.0) * sinf(y / 13.0) * 0.01 * cell.plantMaxEnergy - r1 * 0.05 + r2*r2*0.005) {
-			cell.plantGrowth = 0.005;
+			cell.plantGrowth = 0.002;
 			cell.plantEnergy = cell.plantMaxEnergy;
 		}
 	}

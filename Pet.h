@@ -33,6 +33,8 @@ public:
 	static const int numTouchingCellChannels;
 	static const int numTouchingCellInputs;
 //	static const int numSymetricInputs;
+	static const int numSelfInputNeurons;
+	static const int numMemoryNeurons;
 
 	static const int numInputNeurons;
 	static const int numLayers;
@@ -42,6 +44,8 @@ public:
 	std::vector<std::vector<float> > inputConnections;
 	std::vector<std::vector<std::vector<float> > > processingConnections;
 	std::vector<std::vector<float> > outputConnections;
+
+	std::vector<float> memoryNeurons;
 
 
 	static float geneticDistance(const Pet &a, const Pet &b);

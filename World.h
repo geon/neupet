@@ -24,7 +24,7 @@ class World{
 	
 	static const int width = 300;
 	static const int height = 200;
-	static const int initialPopulationSize = 300;
+	static const int initialPopulationSize = 1000;
 
 //	protected:
 	

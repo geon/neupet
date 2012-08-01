@@ -17,11 +17,13 @@ const int Pet::numTouchingCells = numDirections;
 const int Pet::numTouchingCellChannels = 5;
 const int Pet::numTouchingCellInputs = Pet::numTouchingCells * Pet::numTouchingCellChannels;
 // const int Pet::numSymetricInputs = Pet::numTouchingCellInputs;
+const int Pet::numSelfInputNeurons = 2;
+const int Pet::numMemoryNeurons = 3; // Arbitrary.
 
-const int Pet::numInputNeurons = Pet::numTouchingCellInputs + 1; // There needs to be one extra input always set to 1, to give the NN something to work with in absence of other input.
+const int Pet::numInputNeurons = Pet::numMemoryNeurons + Pet::numSelfInputNeurons + Pet::numTouchingCellInputs + 1; // There needs to be one extra input always set to 1, to give the NN something to work with in absence of other input.
 const int Pet::numLayers = 2; // Arbitrary. >= 1
 const int Pet::layerSize = 10; // Arbitrary. >= 1 (But realistically > the number of "behaviors" you'd like to see.)
-const int Pet::numOutputNeurons = numDirections+3;
+const int Pet::numOutputNeurons = numDirections + numActions + Pet::numMemoryNeurons;
 
 
 Pet::Pet() {
@@ -55,11 +57,18 @@ Pet::Pet() {
 		}
 	}
 	
+
+	// Blank the memory.
+	memoryNeurons.resize(numMemoryNeurons);
+	for (int i = 0; i < numMemoryNeurons; ++i) {
+		memoryNeurons[i] = 0;
+	}
+
 	
 	// Set a random color.
-	color = sf::Color(rand() / (float) RAND_MAX * 255,
-					  rand() / (float) RAND_MAX * 255,
-					  rand() / (float) RAND_MAX * 255);	
+	color = sf::Color(rand() / (float) RAND_MAX * 255 + 0.5,
+					  rand() / (float) RAND_MAX * 255 + 0.5,
+					  rand() / (float) RAND_MAX * 255 + 0.5);	
 }
 
 
@@ -98,15 +107,15 @@ Pet::Pet(Pet &a, Pet &b) {
 	}
 	
 	float factor = rand() / (float) RAND_MAX;
-	color = sf::Color(a.color.r * factor + b.color.r * (1-factor),
-					  a.color.g * factor + b.color.g * (1-factor),
-					  a.color.b * factor + b.color.b * (1-factor));
+	color = sf::Color(a.color.r * factor + b.color.r * (1-factor) + 0.5,
+					  a.color.g * factor + b.color.g * (1-factor) + 0.5,
+					  a.color.b * factor + b.color.b * (1-factor) + 0.5);
 
 	
 	
 	// Add mutations.
 	
-	const float mutationRate = 0.01;
+	const float mutationRate = 0.001;
 
 	for (int i = 0; i < layerSize; ++i) {
 		for (int j = 0; j < numInputNeurons; ++j) {
@@ -135,13 +144,20 @@ Pet::Pet(Pet &a, Pet &b) {
 	}
 
 	if (rand() / (float) RAND_MAX < mutationRate) {
-		color.r = rand() / (float) RAND_MAX * 255;
+		color.r = rand() / (float) RAND_MAX * 255 + 0.5;
 	}
 	if (rand() / (float) RAND_MAX < mutationRate) {
-		color.g = rand() / (float) RAND_MAX * 255;
+		color.g = rand() / (float) RAND_MAX * 255 + 0.5;
 	}
 	if (rand() / (float) RAND_MAX < mutationRate) {
-		color.b = rand() / (float) RAND_MAX * 255;
+		color.b = rand() / (float) RAND_MAX * 255 + 0.5;
+	}
+
+
+	// Blank the memory.
+	memoryNeurons.resize(numMemoryNeurons);
+	for (int i = 0; i < numMemoryNeurons; ++i) {
+		memoryNeurons[i] = 0;
 	}
 }
 
@@ -202,9 +218,14 @@ PetIntention Pet::getPetIntentionInWorld(const World &world){
 	
 
 	// Decide the action based on the 3 neurons after the drections.
-	Action intendedAction = static_cast<Action>((0 < outputNeurons[numRelativeDirections] + 0 ? move   : 0)|
-												(0 < outputNeurons[numRelativeDirections] + 1 ? battle : 0)|
-												(0 < outputNeurons[numRelativeDirections] + 2 ? mate   : 0));
+	Action intendedAction = static_cast<Action>((0 < outputNeurons[numRelativeDirections + 0] ? move   : 0)|
+												(0 < outputNeurons[numRelativeDirections + 1] ? battle : 0)|
+												(0 < outputNeurons[numRelativeDirections + 2] ? mate   : 0));
+
+	// Save output to memory.
+	for (int i = 0; i < numMemoryNeurons; ++i) {
+		memoryNeurons[i] = outputNeurons[numRelativeDirections + numActions + i];
+	}
 	
 	return PetIntention(intendedAction, intendedRelativeDirection);
 }
@@ -322,9 +343,17 @@ void Pet::collectSensoryInput(const World &world, float inputNeurons[numInputNeu
 	// There needs to be one extra input always set to 1, to give the NN something to work with in absence of other input.
 	inputNeurons[currentNeuron++] = 1;
 
-	//
-//	// Sample the currentCell
+	// Sample the currentCell
 //	const WorldCell &currentCell = world.cells[position];
+	
+	// Sample the Pet state.
+	inputNeurons[currentNeuron++] = state.energy;
+	inputNeurons[currentNeuron++] = state.age;
+	
+	// Sample the Pet memory.
+	for (int i = 0; i < numMemoryNeurons; ++i) {
+		inputNeurons[currentNeuron++] = memoryNeurons[i];
+	}
 	
 	// Sample the touchedCell's in all relative directions, in order.
 	for(RelativeDirection relativeDirection = firstRelativeDirection; relativeDirection < numRelativeDirections; ++relativeDirection){
