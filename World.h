@@ -24,7 +24,7 @@ class World{
 	
 	static const int width = 300;
 	static const int height = 200;
-	static const int initialPopulationSize = 300;
+	static const int initialPopulationSize = 1000;
 
 //	protected:
 	
@@ -41,9 +41,10 @@ class World{
 	
 	public:
 
-	int coordinateToIndex(int x, int y);
-	int movePosition(int position, Direction direction);
-	Direction offsetDirectionByRelativeDirection(Direction direction, RelativeDirection relativeDirection);
+	int coordinateToIndex(int x, int y) const;
+	int movePosition(int position, Direction direction) const;
+	Direction offsetDirectionByRelativeDirection(Direction direction, RelativeDirection relativeDirection) const;
+	RelativeDirection relativeDirectionBetweenDirections(Direction direction, Direction comparedToDirection) const;
 
 	void buildCage(int sideLength, Direction openingDirection);
 	void buildWalls();

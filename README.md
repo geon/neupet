@@ -28,20 +28,20 @@ TODO
 
 ### World/Pet Sophistication
 
+* Sprinkle plants in clumps, so there is a stragtegy behind staying close to food.
 * Health, Strength, Metabolism, Mass etc. interacting with each other. Dead Pets should still contain some energy to be useful as food.
-* Battles & Mating - Add a flag for each so the Pet can signal if it is violent or "in heat". Violent Pets will battle anything it moves into. Pets in heat will mate if running into another Pet in heat.
+* New senses.
+	* Sight (1/distance to closest Pet) in n directions over m degrees of FOV. Multiple channels for food, mate, wall and danger?
+	* Smell - Each world cell should have the smell of the last occupant. Outputs to the visiting Pet is the strenght of the smell, and the gene similarity to itself. (?)
+* Make pets sense their own energy level, age etc.
 * Bundle the Pet and PetState into a common stuct for storage in World. Makes the std::map from Pet to PetState unnecesary.
 * Decompose dead pets slowly.
 * Decomposing Pets should seep into the ground, adding nutricients (pland growth rate) for plants.
 * Plants should deplete the nutricients of the ground.
 * Pooping Pets add fertilizer to the ground?
-* Make Pets sense the direction other Pets are facing. This will enable flocking.
 * Water (with Pets able to traverse water or land by varying speed? Value for how land or water-bound they are? Some Pets amphibious. How to ballance it?)
 * WorldCell height - (Replaces impassable walls and water (water level = 0).) Higher energy consumption uphill, impossible to climb too steep hills (gradient > 1), dangerous drops. (Needs 3D (or 2.5D) graphics.)
 * Speciation. Add an input for how many genes a pair of Pets share.
-* New senses.
-	* Sight (1/distance to closest Pet) in n directions over m degrees of FOV. Multiple channels for food, mate, wall and danger?
-	* Smell - Each world cell should have the smell of the last occupant. Outputs to the visiting Pet is the strenght of the smell, and the gene similarity to itself. (?)
 
 ### Misc.
 
@@ -56,14 +56,14 @@ TODO
 
 This will be impotant to make the simulation sensislbe. They are the laws of physics in the World.
 
-#### Genetically controlled values
+**Genetically controlled values**
 
 * birthIdealMass - Mass of Pet at birth.
 * targetIdealMass - Mass of fully grown Pet.
 * growthRate
 * childrenPerBirth
 
-#### Simulation controlled values
+**Simulation controlled values**
 
 * energyConversionFactor = 10
 * breedEnergy - birthIdealMass * childrenPerBirth * energyConversionFactor
@@ -71,7 +71,7 @@ This will be impotant to make the simulation sensislbe. They are the laws of phy
 * maxMass = Target+50%, minMass )
 * mass - (Mass gained by eating = mass of food / energyConversionFactor)
 
-#### Calculated values
+**Calculated values**
 
 * Energy content/nutriciency => directly proportional to Mass.
 * Greater mass => longer pregnancy (directly proportional, plus constant) http://www.applet-magic.com/gestation.htm

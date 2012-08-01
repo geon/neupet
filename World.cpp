@@ -1,5 +1,4 @@
 #include "World.h"
-#include "SensoryInput.h"
 
 #include <iostream>
 #include <algorithm>
@@ -29,24 +28,24 @@ World::World(){
 }
 
 
-World::~World(){
+World::~World() {
 	
-	for(std::list<Pet *>::iterator i=pets.begin(); i != pets.end(); ++i){
+	for (std::list<Pet *>::iterator i=pets.begin(); i != pets.end(); ++i) {
 		delete *i;
 	}
 	
-	for(std::list<Pet *>::iterator i=petArchive.begin(); i != petArchive.end(); ++i){
+	for (std::list<Pet *>::iterator i=petArchive.begin(); i != petArchive.end(); ++i) {
 		delete *i;
 	}
 }
 
 
-int World::coordinateToIndex(int x, int y){
+int World::coordinateToIndex(int x, int y) const {
 	return y*width + x;
 }
 
 
-int World::movePosition(int position, Direction direction){
+int World::movePosition(int position, Direction direction) const {
 	
 	int x = position % width;
 	int y = position / width;
@@ -92,15 +91,23 @@ int World::movePosition(int position, Direction direction){
 }
 
 
-Direction World::offsetDirectionByRelativeDirection(Direction direction, RelativeDirection relativeDirection){
+Direction World::offsetDirectionByRelativeDirection(Direction direction, RelativeDirection relativeDirection) const {
 	
 	return static_cast<Direction>(
-		(static_cast<int>(direction) + static_cast<int>(numDirections) + static_cast<int>(relativeDirection)) % static_cast<int>(numDirections)
-	);
+								  (static_cast<int>(direction) + static_cast<int>(relativeDirection)) % static_cast<int>(numDirections)
+								  );
 }
 
 
-void World::buildCage(int sideLength, Direction openingDirection){
+RelativeDirection World::relativeDirectionBetweenDirections(Direction direction, Direction comparedToDirection) const {
+	
+	return static_cast<RelativeDirection>(
+										  (static_cast<int>(direction) - static_cast<int>(comparedToDirection) + static_cast<int>(numDirections)) % static_cast<int>(numRelativeDirections)
+										  );
+}
+
+
+void World::buildCage(int sideLength, Direction openingDirection) {
 	// Draw a "cage" of walls with one side open.
 	
 	// Begin in the center.
@@ -131,7 +138,7 @@ void World::buildCage(int sideLength, Direction openingDirection){
 	}
 }
 
-void World::buildWalls(){
+void World::buildWalls() {
 	// Place walls along the sides of the world.
 	
 	// Place wall.
@@ -146,7 +153,7 @@ void World::buildWalls(){
 }
 
 
-void World::regeneratePopulation(){
+void World::regeneratePopulation() {
 
 	// Remove any remaining Pet.
 	while(pets.size()){
@@ -189,7 +196,7 @@ void World::regeneratePopulation(){
 }
 
 
-void World::sprinklePlants(int numPlants){
+void World::sprinklePlants(int numPlants) {
 	for(int i=0; i<numPlants; ++i){
 		int position = rand() % (width*height);
 		WorldCell &cell = cells[position];
@@ -200,7 +207,7 @@ void World::sprinklePlants(int numPlants){
 }
 
 
-void World::render(sf::RenderWindow &window){
+void World::render(sf::RenderWindow &window) {
 	
 	for(int y=0; y < height; ++y){
 		
@@ -238,7 +245,7 @@ void World::render(sf::RenderWindow &window){
 }
 
 
-bool World::step(){
+bool World::step() {
 	
 	// Update Pets.
 	std::list<Pet *>::iterator i = pets.begin();
@@ -249,7 +256,7 @@ bool World::step(){
 		// Advance i before applayPetIntention, so the loop won't crash when a Pet is erased.
 		i++;
 		
-		applyPetIntentionToPet(pet, pet->getPetIntentionForSensoryInput(SensoryInput(this, pet)));
+		applyPetIntentionToPet(pet, pet->getPetIntentionInWorld(*this));
 	}
 	
 	// Update WorldCells.
@@ -265,7 +272,7 @@ bool World::step(){
 }
 
 
-void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention){
+void World::applyPetIntentionToPet(Pet *pet, PetIntention petIntention) {
 	
 	PetState &currentState = petStates[pet];
 	PetState newState = currentState;
