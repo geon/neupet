@@ -21,7 +21,7 @@ World::World(){
 	buildCage(95, downRight);
 	buildWalls();
 
-	sprinklePlants(3000);
+	sprinklePlants();
 	regeneratePopulation();
 
 	image.Create(width*2+1, height*2);
@@ -204,7 +204,7 @@ void World::regeneratePopulation() {
 }
 
 
-void World::sprinklePlants(int numPlants) {
+void World::sprinklePlants() {
 	for(int position=0; position<width*height; ++position){
 
 		
@@ -216,10 +216,8 @@ void World::sprinklePlants(int numPlants) {
 		indexToCoordinate(position, x, y);
 		
 		
-		cell.plantGrowth = sinf(x / 20.0) * sinf(y / 20.0) * 0.01 * cell.plantMaxEnergy - r1 * 0.1 + r2*r2*0.01;
-		if (cell.plantGrowth <= 0) {
-			cell.plantGrowth = 0;
-		} else {
+		if (0 < sinf(x / 13.0) * sinf(y / 13.0) * 0.01 * cell.plantMaxEnergy - r1 * 0.05 + r2*r2*0.005) {
+			cell.plantGrowth = 0.005;
 			cell.plantEnergy = cell.plantMaxEnergy;
 		}
 	}

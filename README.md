@@ -28,13 +28,13 @@ TODO
 
 ### World/Pet Sophistication
 
-* Sprinkle plants in clumps, so there is a stragtegy behind staying close to food.
+* Make pets sense their own energy level, age etc.
 * Add hazardous areas. Water? Lava?
 * Health, Strength, Metabolism, Mass etc. interacting with each other. Dead Pets should still contain some energy to be useful as food.
+* Pet "memory". Implement as an output feeding the input value of the next step.
 * New senses.
 	* Sight (1/distance to closest Pet) in n directions over m degrees of FOV. Multiple channels for food, mate, wall and danger?
 	* Smell - Each world cell should have the smell of the last occupant. Outputs to the visiting Pet is the strenght of the smell, and the gene similarity to itself. (?)
-* Make pets sense their own energy level, age etc.
 * Bundle the Pet and PetState into a common stuct for storage in World. Makes the std::map from Pet to PetState unnecesary.
 * Decompose dead pets slowly.
 * Decomposing Pets should seep into the ground, adding nutricients (pland growth rate) for plants.
@@ -46,7 +46,9 @@ TODO
 
 ### Misc.
 
-* Save & load pet population. JSON?
+* Save & load Pet population. JSON?
+* Save and load World layout.
+* Cycle through several World layouts with a set interval. Enbles training Pets for moving fields of plants etc.
 * Non-neural Pet class until I get the world and evolution working.
 * GUI. Picking and examining Pets, etc.
 * Ancestry tracking. Useful for statistics.

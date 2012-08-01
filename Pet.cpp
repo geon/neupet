@@ -19,8 +19,8 @@ const int Pet::numTouchingCellInputs = Pet::numTouchingCells * Pet::numTouchingC
 // const int Pet::numSymetricInputs = Pet::numTouchingCellInputs;
 
 const int Pet::numInputNeurons = Pet::numTouchingCellInputs + 1; // There needs to be one extra input always set to 1, to give the NN something to work with in absence of other input.
-const int Pet::numLayers = 1; // Arbitrary. >= 1
-const int Pet::layerSize = 6; // Arbitrary. >= 1 (But realistically > the number of "behaviors" you'd like to see.)
+const int Pet::numLayers = 2; // Arbitrary. >= 1
+const int Pet::layerSize = 10; // Arbitrary. >= 1 (But realistically > the number of "behaviors" you'd like to see.)
 const int Pet::numOutputNeurons = numDirections+3;
 
 
@@ -134,10 +134,14 @@ Pet::Pet(Pet &a, Pet &b) {
 		}
 	}
 
-	if (rand() / (float) RAND_MAX < 0.01) {
-		color = sf::Color(rand() / (float) RAND_MAX * 255,
-						  rand() / (float) RAND_MAX * 255,
-						  rand() / (float) RAND_MAX * 255);
+	if (rand() / (float) RAND_MAX < mutationRate) {
+		color.r = rand() / (float) RAND_MAX * 255;
+	}
+	if (rand() / (float) RAND_MAX < mutationRate) {
+		color.g = rand() / (float) RAND_MAX * 255;
+	}
+	if (rand() / (float) RAND_MAX < mutationRate) {
+		color.b = rand() / (float) RAND_MAX * 255;
 	}
 }
 
