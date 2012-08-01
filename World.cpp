@@ -45,10 +45,17 @@ int World::coordinateToIndex(int x, int y) const {
 }
 
 
+void World::indexToCoordinate(int position, int &x, int &y) const {
+	
+	x = position % width;
+	y = position / width;
+}
+
+
 int World::movePosition(int position, Direction direction) const {
 	
-	int x = position % width;
-	int y = position / width;
+	int x, y;
+	indexToCoordinate(position, x, y);
 	
 	// Odd rows are indented half a hexagon.
 	switch (direction) {
@@ -84,6 +91,7 @@ int World::movePosition(int position, Direction direction) const {
 			break;
 	}
 	
+	// Make the wold tiling.
 	x = (x + width) % width;
 	y = (y + height) % height;
 	
@@ -197,12 +205,23 @@ void World::regeneratePopulation() {
 
 
 void World::sprinklePlants(int numPlants) {
-	for(int i=0; i<numPlants; ++i){
-		int position = rand() % (width*height);
-		WorldCell &cell = cells[position];
+	for(int position=0; position<width*height; ++position){
+
 		
-		cell.plantGrowth = 0.005;
-		cell.plantEnergy = cell.plantMaxEnergy;
+		WorldCell &cell = cells[position];
+
+		float r1 = rand() / (float) RAND_MAX;
+		float r2 = rand() / (float) RAND_MAX;
+		int x, y;
+		indexToCoordinate(position, x, y);
+		
+		
+		cell.plantGrowth = sinf(x / 20.0) * sinf(y / 20.0) * 0.01 * cell.plantMaxEnergy - r1 * 0.1 + r2*r2*0.01;
+		if (cell.plantGrowth <= 0) {
+			cell.plantGrowth = 0;
+		} else {
+			cell.plantEnergy = cell.plantMaxEnergy;
+		}
 	}
 }
 

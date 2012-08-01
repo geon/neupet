@@ -29,6 +29,7 @@ TODO
 ### World/Pet Sophistication
 
 * Sprinkle plants in clumps, so there is a stragtegy behind staying close to food.
+* Add hazardous areas. Water? Lava?
 * Health, Strength, Metabolism, Mass etc. interacting with each other. Dead Pets should still contain some energy to be useful as food.
 * New senses.
 	* Sight (1/distance to closest Pet) in n directions over m degrees of FOV. Multiple channels for food, mate, wall and danger?

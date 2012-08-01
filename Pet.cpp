@@ -98,9 +98,9 @@ Pet::Pet(Pet &a, Pet &b) {
 	}
 	
 	float factor = rand() / (float) RAND_MAX;
-	color = sf::Color(a.color.r * factor + b.color.r * (factor - 1),
-					  a.color.g * factor + b.color.g * (factor - 1),
-					  a.color.b * factor + b.color.b * (factor - 1));
+	color = sf::Color(a.color.r * factor + b.color.r * (1-factor),
+					  a.color.g * factor + b.color.g * (1-factor),
+					  a.color.b * factor + b.color.b * (1-factor));
 
 	
 	
@@ -134,7 +134,7 @@ Pet::Pet(Pet &a, Pet &b) {
 		}
 	}
 
-	if (rand() / (float) RAND_MAX < 0.0001) {
+	if (rand() / (float) RAND_MAX < 0.01) {
 		color = sf::Color(rand() / (float) RAND_MAX * 255,
 						  rand() / (float) RAND_MAX * 255,
 						  rand() / (float) RAND_MAX * 255);

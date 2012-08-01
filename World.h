@@ -42,6 +42,7 @@ class World{
 	public:
 
 	int coordinateToIndex(int x, int y) const;
+	void indexToCoordinate(int position, int &x, int &y) const;
 	int movePosition(int position, Direction direction) const;
 	Direction offsetDirectionByRelativeDirection(Direction direction, RelativeDirection relativeDirection) const;
 	RelativeDirection relativeDirectionBetweenDirections(Direction direction, Direction comparedToDirection) const;
